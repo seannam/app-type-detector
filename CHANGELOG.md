@@ -1,3 +1,7 @@
+## Unreleased
+
+_Adopted by /version:adopt; prior history below is preserved as-is._
+
 # Changelog
 
 All notable changes to `app-type-detector` are tracked here, split by release

@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "skill_version": "0.1.0",
+  "installed_at": "2026-04-24T01:39:10Z",
+  "last_updated_at": "2026-04-24T01:39:10Z",
+  "preset": "rust-cargo:auto::app",
+  "files": [
+    {
+      "path": "scripts/version/current.sh",
+      "source": "~/.claude/scripts/version/current.sh",
+      "sha256": "cfa3d1bd9f8cb9422292efa96b396ac01e79507c72bded19a75bb086f05e4f4c",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/sync.sh",
+      "source": "~/.claude/scripts/version/sync.sh",
+      "sha256": "c9642f57fb6d2680eb635ab31b3a019ca3d43cdab9d777fecc533ded8e53b0c0",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/bump.sh",
+      "source": "~/.claude/scripts/version/bump.sh",
+      "sha256": "579497cc1fb503c11dd21646e78d664ffa210c7aebf15c0867af1db1a735cba1",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/release.sh",
+      "source": "~/.claude/scripts/version/release.sh",
+      "sha256": "6f7578599fb7f3d1832ca83911b1dad7f799247f740e6d397a489a24304a7eb1",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/changelog.sh",
+      "source": "~/.claude/scripts/version/changelog.sh",
+      "sha256": "d4dd66bd8c6a52f28822114d9d77561976599a7e7ee2d4e8b8d9ad060652d0ec",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/apple-bump.sh",
+      "source": "~/.claude/scripts/version/apple-bump.sh",
+      "sha256": "f6ce30ca83d97b6256f7a53a2775e22a1c43db359bde641c6cb398d5307a472b",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/adopt.sh",
+      "source": "~/.claude/scripts/version/adopt.sh",
+      "sha256": "1fda3048df37e779473879aa258151a00f87448b5b28813c302ed06b47309b1f",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/update.sh",
+      "source": "~/.claude/scripts/version/update.sh",
+      "sha256": "382d4d22def370f0d44d426df0c8534f7be1ae9b0cc5b7485fa397d40c82157f",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/common.sh",
+      "source": "~/.claude/scripts/version/lib/common.sh",
+      "sha256": "e810f5ba849b06dde8249ee18d48a7d0193ee0631c94bb8da64f0c608a052876",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/manifest.sh",
+      "source": "~/.claude/scripts/version/lib/manifest.sh",
+      "sha256": "061a157820f283f836f12b8c6d0fafc67aaf1dd8189feaa3602764a4c5fcc98c",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/install-manifest.sh",
+      "source": "~/.claude/scripts/version/lib/install-manifest.sh",
+      "sha256": "00b1c0cf09ddc70eb02e7423c246c59b97db8d30f771931b24579ce6a4deb07d",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/commit-bump.sh",
+      "source": "~/.claude/scripts/version/lib/commit-bump.sh",
+      "sha256": "849b8c9edbf30772297cb256134533ea73c12cb3c138a0fc8b20776dfa73a976",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/should-release.sh",
+      "source": "~/.claude/scripts/version/lib/should-release.sh",
+      "sha256": "3635ef5c893cfa36c3851b653fa4087d706e05068d441c62bf7b8895fee7b72e",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/existing-ci-detect.sh",
+      "source": "~/.claude/scripts/version/lib/existing-ci-detect.sh",
+      "sha256": "785eebaea3bc228dc8e7215bbcf233dee62b5ec82e5f979c9434fb5f5adfb9cd",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/promote-specs.sh",
+      "source": "~/.claude/scripts/version/lib/promote-specs.sh",
+      "sha256": "e3ceb67e8c1ae32d9d6db682be7ff94f6d4605dcc9750b3f4041356fd95b1745",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/lib/adopt-preflight.sh",
+      "source": "~/.claude/scripts/version/lib/adopt-preflight.sh",
+      "sha256": "be34a93afb964c85aee16efc93bd0eb0ad2c68bf525a3481b709def4ecb20f48",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": "scripts/version/presets/rust-cargo.json",
+      "source": "~/.claude/skills/version/presets/rust-cargo.json",
+      "sha256": "9b37bdfa7af32d38e2ca68c72c179734dc4ac49f2867ba42da3063e84289e6c3",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    },
+    {
+      "path": ".github/workflows/auto-release-on-push.yml",
+      "source": "~/.claude/skills/version/presets/workflows/auto-release-on-push.yml",
+      "sha256": "f522e83e6c0e8f8b466bed00c94a95f1eb8dfb61273076601a2808183a3cbeb8",
+      "installed_at": "2026-04-24T01:39:10Z",
+      "updated_at": "2026-04-24T01:39:10Z"
+    }
+  ]
+}
