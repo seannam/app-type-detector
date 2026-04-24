@@ -20,8 +20,10 @@ is `app_type = "game"` AND `tech_stack.game.engines = ["godot"]` AND
 - `app/crates/app-type-detector` — the core Rust crate (library + engine +
   default ruleset + human renderer).
 - `app/crates/app-type-detector-cli` — a CLI binary wrapping the core crate.
-- `app/bindings/node` and `app/bindings/python` — planned language bindings
-  (directories scaffolded, implementations are v0.2 work).
+- `app/bindings/node` — `@indiecraft/app-type-detector` N-API binding
+  (see [`docs/05-node-usage.md`](docs/05-node-usage.md)).
+- `app/bindings/python` — planned Python binding (PyPI release tracked
+  for a future spec).
 - `docs/` — output format spec, rule grammar reference, vocabulary notes.
 
 ## Quick start (Rust)
@@ -33,6 +35,24 @@ let report = detect_path("./my-project")?;
 println!("{}", report.to_json());
 ```
 
+## Quick start (Node.js)
+
+```sh
+npm i @indiecraft/app-type-detector
+```
+
+```ts
+import { detectPath, renderHumanReadable } from "@indiecraft/app-type-detector";
+
+const report = detectPath("./my-project");
+console.log(report.app_type.primary, report.app_type.confidence);
+console.log(renderHumanReadable(report));
+```
+
+Ships per-triple prebuilt native binaries via `napi-rs` (no `node-gyp`,
+no network I/O at install time). Full guide:
+[`docs/05-node-usage.md`](docs/05-node-usage.md).
+
 ## CLI
 
 ```sh
@@ -42,6 +62,23 @@ cargo run -p app-type-detector-cli -- detect ./my-project --format text
 ```
 
 Formats: `json`, `text`, `tsv`, `fires-jsonl`. Default is `text`.
+
+## Just commands
+
+If you have [`just`](https://github.com/casey/just) installed, the `justfile` at
+the repo root wraps the most common flows:
+
+```sh
+just                              # list all recipes
+just detect                       # scan the current working directory (text)
+just detect ./my-project          # scan a specific directory
+just detect ./my-project json     # pick a format: text (default), json, tsv, fires-jsonl
+just detect-release ./my-project  # same as detect, but builds the CLI in release mode
+just test                         # fmt + clippy + cargo test (scripts/test-all.sh)
+```
+
+Paths are resolved to absolute paths, so `just detect` works the same whether
+you run it from the repo root or any subdirectory.
 
 ## Properties
 
@@ -58,7 +95,8 @@ Formats: `json`, `text`, `tsv`, `fires-jsonl`. Default is `text`.
 ```
 ├── app/crates/app-type-detector/      # core library
 ├── app/crates/app-type-detector-cli/  # CLI binary
-├── app/bindings/{node,python}/        # planned language bindings (v0.2)
+├── app/bindings/node/                 # @indiecraft/app-type-detector (napi-rs)
+├── app/bindings/python/               # planned PyPI binding
 ├── specs/                             # feature specs
 ├── docs/                              # vocabulary, rule grammar, output format
 └── CHANGELOG.md, LICENSE (MIT)

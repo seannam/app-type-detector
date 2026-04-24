@@ -1,0 +1,27 @@
+{
+  "name": "@indiecraft/app-type-detector-linux-x64-musl",
+  "version": "0.2.0",
+  "description": "Prebuilt linux-x64 (musl) binary for @indiecraft/app-type-detector. Installed automatically as an optional dependency; do not install directly.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snam/app-type-detector.git",
+    "directory": "app/bindings/node/npm/linux-x64-musl"
+  },
+  "main": "app-type-detector.linux-x64-musl.node",
+  "files": [
+    "app-type-detector.linux-x64-musl.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "musl"
+  ],
+  "engines": {
+    "node": ">= 18"
+  }
+}

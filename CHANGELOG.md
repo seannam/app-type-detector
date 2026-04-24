@@ -9,6 +9,20 @@
 
 ## Unreleased
 
+### New
+
+- **npm (`@indiecraft/app-type-detector`) · 0.2.0** — first real Node
+  release. Ships the `napi-rs` binding (`detectPath`, `detectFiles`,
+  `defaultRuleset`, `renderHumanReadable`) with prebuilt native
+  binaries for six triples (`linux-x64-gnu`, `linux-arm64-gnu`,
+  `linux-x64-musl`, `darwin-x64`, `darwin-arm64`, `win32-x64-msvc`) as
+  optional-dep subpackages. Includes committed TypeScript typings,
+  byte-identical parity with the Rust crate's JSON output asserted by
+  `__test__/index.test.ts`, and a release workflow
+  (`.github/workflows/release-npm.yml`) that rides the existing
+  monorepo `v*.*.*` tag so the crate and the npm channel stay in
+  lockstep via the extended `rust-cargo` version preset.
+
 _Adopted by /version:adopt; prior history below is preserved as-is._
 
 # Changelog

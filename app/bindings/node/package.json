@@ -1,0 +1,80 @@
+{
+  "name": "@indiecraft/app-type-detector",
+  "version": "0.2.0",
+  "description": "Classify any codebase: returns a typed DetectionReport (app_type, tech_stack, scorecard). Native N-API bindings, zero runtime dependencies.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snam/app-type-detector.git",
+    "directory": "app/bindings/node"
+  },
+  "homepage": "https://github.com/snam/app-type-detector",
+  "bugs": {
+    "url": "https://github.com/snam/app-type-detector/issues"
+  },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "detector",
+    "app-type",
+    "tech-stack",
+    "classifier",
+    "codebase",
+    "repo",
+    "napi-rs"
+  ],
+  "engines": {
+    "node": ">= 18"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "optionalDependencies": {
+    "@indiecraft/app-type-detector-linux-x64-gnu": "0.2.0",
+    "@indiecraft/app-type-detector-linux-arm64-gnu": "0.2.0",
+    "@indiecraft/app-type-detector-linux-x64-musl": "0.2.0",
+    "@indiecraft/app-type-detector-darwin-x64": "0.2.0",
+    "@indiecraft/app-type-detector-darwin-arm64": "0.2.0",
+    "@indiecraft/app-type-detector-win32-x64-msvc": "0.2.0"
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "test": "vitest run",
+    "prepublishOnly": "napi prepublish -t npm --skip-gh-release"
+  },
+  "napi": {
+    "name": "app-type-detector",
+    "package": {
+      "name": "@indiecraft/app-type-detector"
+    },
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  }
+}

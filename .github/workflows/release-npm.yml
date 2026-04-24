@@ -1,0 +1,212 @@
+# Publish @indiecraft/app-type-detector to npm on a v*.*.* tag push.
+#
+# Rides the canonical monorepo tag emitted by
+# scripts/version/release.sh (from auto-release-on-push.yml). This
+# workflow never creates tags, GitHub releases, or CHANGELOG entries;
+# those responsibilities stay exclusive to the version harness.
+
+name: Release (npm)
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: release-npm
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  resolve-version:
+    name: Resolve canonical version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version via scripts/version/current.sh
+        id: resolve
+        run: |
+          set -euo pipefail
+          VERSION="$(./scripts/version/current.sh --raw)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Canonical version: $VERSION"
+
+      - name: Assert manifests are in sync with the canonical version
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.resolve.outputs.version }}"
+          mismatches=0
+          for f in \
+            app/bindings/node/package.json \
+            app/bindings/node/npm/linux-x64-gnu/package.json \
+            app/bindings/node/npm/linux-arm64-gnu/package.json \
+            app/bindings/node/npm/linux-x64-musl/package.json \
+            app/bindings/node/npm/darwin-x64/package.json \
+            app/bindings/node/npm/darwin-arm64/package.json \
+            app/bindings/node/npm/win32-x64-msvc/package.json
+          do
+            v="$(jq -r .version "$f")"
+            if [ "$v" != "$VERSION" ]; then
+              echo "::error file=$f::version $v != canonical $VERSION"
+              mismatches=$((mismatches + 1))
+            fi
+          done
+          if [ $mismatches -gt 0 ]; then
+            echo "Preset drift detected. Re-run scripts/version/sync.sh rust-cargo $VERSION on main." >&2
+            exit 1
+          fi
+
+  build:
+    name: Build ${{ matrix.triple }}
+    needs: [resolve-version]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - triple: linux-x64-gnu
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-unknown-linux-gnu
+          - triple: linux-arm64-gnu
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            setup: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+            build: CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc pnpm -C app/bindings/node exec napi build --platform --release --target aarch64-unknown-linux-gnu
+          - triple: linux-x64-musl
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            setup: sudo apt-get update && sudo apt-get install -y musl-tools
+            build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-unknown-linux-musl
+          - triple: darwin-x64
+            os: macos-13
+            target: x86_64-apple-darwin
+            build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-apple-darwin
+          - triple: darwin-arm64
+            os: macos-14
+            target: aarch64-apple-darwin
+            build: pnpm -C app/bindings/node exec napi build --platform --release --target aarch64-apple-darwin
+          - triple: win32-x64-msvc
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: app/bindings/node/pnpm-lock.yaml
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Platform-specific setup
+        if: matrix.setup != ''
+        run: ${{ matrix.setup }}
+        shell: bash
+
+      - name: Install Node dependencies
+        run: pnpm -C app/bindings/node install --frozen-lockfile
+        shell: bash
+
+      - name: Build native binding (${{ matrix.triple }})
+        run: ${{ matrix.build }}
+        shell: bash
+
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binding-${{ matrix.triple }}
+          path: app/bindings/node/app-type-detector.${{ matrix.triple }}.node
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish to npm
+    needs: [resolve-version, build]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.resolve-version.outputs.version }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: app/bindings/node/pnpm-lock.yaml
+          registry-url: 'https://registry.npmjs.org'
+          always-auth: true
+
+      - name: Install Node dependencies
+        run: pnpm -C app/bindings/node install --frozen-lockfile
+
+      - name: Download per-triple artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: app/bindings/node/artifacts
+
+      - name: Stage artifacts into per-triple subpackages
+        run: |
+          set -euo pipefail
+          for triple in linux-x64-gnu linux-arm64-gnu linux-x64-musl darwin-x64 darwin-arm64 win32-x64-msvc; do
+            src="app/bindings/node/artifacts/binding-${triple}/app-type-detector.${triple}.node"
+            dst="app/bindings/node/npm/${triple}/app-type-detector.${triple}.node"
+            if [ ! -f "$src" ]; then
+              echo "::error::missing artifact for triple $triple"
+              exit 1
+            fi
+            cp "$src" "$dst"
+            ls -la "$dst"
+          done
+
+      - name: Final version-drift guard
+        run: |
+          set -euo pipefail
+          echo "Asserting every published package.json reports version $VERSION"
+          uniq_count=$(jq -r .version \
+            app/bindings/node/package.json \
+            app/bindings/node/npm/*/package.json | sort -u | wc -l | tr -d ' ')
+          actual=$(jq -r .version app/bindings/node/package.json)
+          if [ "$uniq_count" != "1" ] || [ "$actual" != "$VERSION" ]; then
+            echo "::error::version drift detected; expected $VERSION, got $actual (unique lines: $uniq_count)"
+            exit 1
+          fi
+
+      - name: Publish per-triple subpackages
+        run: |
+          set -euo pipefail
+          for triple in linux-x64-gnu linux-arm64-gnu linux-x64-musl darwin-x64 darwin-arm64 win32-x64-msvc; do
+            echo "::group::publishing @indiecraft/app-type-detector-${triple}@${VERSION}"
+            (cd "app/bindings/node/npm/${triple}" && npm publish --access public --provenance)
+            echo "::endgroup::"
+          done
+
+      - name: Publish root package
+        run: |
+          set -euo pipefail
+          echo "::group::publishing @indiecraft/app-type-detector@${VERSION}"
+          (cd app/bindings/node && npm publish --access public --provenance)
+          echo "::endgroup::"

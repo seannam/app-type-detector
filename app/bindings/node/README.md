@@ -1,17 +1,73 @@
-# `@snam/app-type-detector` (Node binding)
+# `@indiecraft/app-type-detector`
 
-Placeholder for the `napi-rs` Node binding. The core crate under
-`app/crates/app-type-detector` is shipped in v0.1.0; the Node binding is
-scheduled for v0.2.
+Classify any codebase from Node.js. Given a directory on disk or an
+in-memory file map, returns a typed `DetectionReport` describing the
+project's app type (game, web app, CLI tool, library, …), tech stack
+(languages, build systems, runtimes, platforms, frameworks), and a
+machine-readable scorecard of every rule that fired.
 
-Planned surface:
+Thin native binding around the Rust core crate via
+[`napi-rs`](https://napi.rs/). Ships per-triple prebuilt binaries as
+optional-dep subpackages: no `node-gyp`, no post-install toolchain, no
+network I/O at install time.
+
+## Install
+
+```sh
+npm i @indiecraft/app-type-detector
+```
+
+Exactly one native subpackage is pulled to match your machine's triple.
+
+## Example
 
 ```ts
-import { detectPath, detectFiles, defaultRuleset, renderHumanReadable } from "@snam/app-type-detector";
+import {
+  detectPath,
+  detectFiles,
+  defaultRuleset,
+  renderHumanReadable,
+} from "@indiecraft/app-type-detector";
 
 const report = detectPath("./my-project");
+console.log(report.app_type.primary, report.app_type.confidence);
 console.log(renderHumanReadable(report));
 ```
 
-Build strategy: per-triple prebuilt binaries published as optional-dep
-subpackages, with a WASM fallback for restricted runtimes.
+`detectFiles` classifies an in-memory file map (useful for editor
+integrations, CI jobs that already have contents loaded, or
+sandboxed environments):
+
+```ts
+const fromMemory = detectFiles({
+  files: {
+    "package.json": JSON.stringify({ dependencies: { next: "14.0.0" } }),
+    "pages/index.tsx": null, // null = file exists but contents unknown
+  },
+});
+```
+
+`defaultRuleset()` returns the bundled ruleset as a plain JS object,
+and `renderHumanReadable(report)` reproduces the CLI's `--format text`
+output.
+
+## Triple matrix
+
+| Triple              | OS       | CPU     | libc   |
+| ------------------- | -------- | ------- | ------ |
+| `darwin-arm64`      | macOS    | Apple   | —      |
+| `darwin-x64`        | macOS    | x86\_64 | —      |
+| `linux-x64-gnu`     | Linux    | x86\_64 | glibc  |
+| `linux-arm64-gnu`   | Linux    | aarch64 | glibc  |
+| `linux-x64-musl`    | Linux    | x86\_64 | musl   |
+| `win32-x64-msvc`    | Windows  | x86\_64 | —      |
+
+A WASM fallback for browser / edge runtimes is planned.
+
+Full usage guide, troubleshooting, and release notes live in
+[`docs/05-node-usage.md`](https://github.com/snam/app-type-detector/blob/main/docs/05-node-usage.md).
+
+## License
+
+MIT. Source at
+[github.com/snam/app-type-detector](https://github.com/snam/app-type-detector).

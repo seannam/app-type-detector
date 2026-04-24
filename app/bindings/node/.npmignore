@@ -1,0 +1,17 @@
+# Only ship the loader, types, metadata, and the README. Everything
+# else (Rust sources, tests, generated artifacts, per-triple subpackage
+# scaffolds) stays out of the root tarball.
+src/
+__test__/
+npm/
+target/
+tests/
+node_modules/
+Cargo.toml
+Cargo.lock
+build.rs
+tsconfig.json
+vitest.config.ts
+.eslintrc*
+.prettierrc*
+*.log
