@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1] - 2026-04-24
+
+
+### Fixes
+
+- wire npm publishing via OIDC Trusted Publishing
+- retrigger npm release workflow for v0.3.0 publish
+
+
 ## [0.3.0] - 2026-04-24
 
 ### New
