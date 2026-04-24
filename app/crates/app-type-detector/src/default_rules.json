@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "rules": [
     {
       "id": "unity-engine",
@@ -606,6 +606,301 @@
         "confidence_weight": 0.2,
         "contributions": [
           { "field": "tech_stack.iac", "value": "terraform" }
+        ]
+      }
+    },
+    {
+      "id": "node-project",
+      "description": "Baseline: any Node/JS project with a package.json.",
+      "when": { "kind": "file_exists", "path": "package.json" },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "javascript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.package_managers", "value": "npm" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.platforms", "value": "web" }
+        ]
+      }
+    },
+    {
+      "id": "typescript-sources",
+      "description": "Baseline: tsconfig.json or enough .ts files to signal TypeScript.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "tsconfig.json" },
+          { "kind": "glob", "pattern": "**/*.ts", "min_count": 3 }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "typescript" }
+        ]
+      }
+    },
+    {
+      "id": "javascript-sources",
+      "description": "Baseline: enough .js files to signal JavaScript.",
+      "when": { "kind": "glob", "pattern": "**/*.js", "min_count": 3 },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "javascript" }
+        ]
+      }
+    },
+    {
+      "id": "python-project",
+      "description": "Baseline: any Python project with a standard manifest.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "pyproject.toml" },
+          { "kind": "file_exists", "path": "requirements.txt" },
+          { "kind": "file_exists", "path": "setup.py" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "bun-runtime",
+      "description": "Bun runtime detected via a bun lockfile.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "bun.lockb" },
+          { "kind": "file_exists", "path": "bun.lock" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "tech_stack.runtimes", "value": "bun" },
+          { "field": "tech_stack.package_managers", "value": "bun" }
+        ]
+      }
+    },
+    {
+      "id": "fastify-api",
+      "description": "Fastify web API (Node/TypeScript).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"fastify\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "fastify" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "express-api",
+      "description": "Express web API (Node/JavaScript).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"express\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "express" },
+          { "field": "tech_stack.languages", "value": "javascript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "hono-api",
+      "description": "Hono web API (Node/TypeScript/Edge).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"hono\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "hono" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "koa-api",
+      "description": "Koa web API (Node/JavaScript).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"koa\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "koa" },
+          { "field": "tech_stack.languages", "value": "javascript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "flask-api",
+      "description": "Flask web API (Python).",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "\"flask(?:\"|[><=!~])" },
+          { "kind": "content", "file": "requirements.txt", "regex": "(?mi)^flask(?:$|[^\\w-])" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "flask" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" },
+          { "field": "tech_stack.platforms", "value": "web" }
+        ]
+      }
+    },
+    {
+      "id": "django-app",
+      "description": "Django web application (Python).",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "manage.py" },
+          { "kind": "content", "file": "pyproject.toml", "regex": "\"django(?:\"|[><=!~])" },
+          { "kind": "content", "file": "requirements.txt", "regex": "(?mi)^django(?:$|[^\\w-])" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "django" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" },
+          { "field": "tech_stack.platforms", "value": "web" }
+        ]
+      }
+    },
+    {
+      "id": "python-telegram-bot",
+      "description": "Long-running Telegram bot built on python-telegram-bot.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "python-telegram-bot" },
+          { "kind": "content", "file": "requirements.txt", "regex": "python-telegram-bot" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "daemon", "delta": 0.9 },
+          { "field": "tech_stack.frameworks", "value": "python_telegram_bot" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "discord-py-bot",
+      "description": "Long-running Discord bot built on discord.py.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "discord\\.py" },
+          { "kind": "content", "file": "requirements.txt", "regex": "discord\\.py" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "daemon", "delta": 0.9 },
+          { "field": "tech_stack.frameworks", "value": "discord_py" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "slack-bolt-bot",
+      "description": "Slack bot built on the Bolt for Python framework.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "slack[-_]bolt" },
+          { "kind": "content", "file": "requirements.txt", "regex": "slack[-_]bolt" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "daemon", "delta": 0.8 },
+          { "field": "tech_stack.frameworks", "value": "slack_bolt" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "cargo-workspace",
+      "description": "Rust cargo workspace root (has [workspace] table).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "Cargo.toml" },
+          { "kind": "content", "file": "Cargo.toml", "regex": "\\[workspace\\]" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.4 },
+          { "field": "tech_stack.languages", "value": "rust" },
+          { "field": "tech_stack.build_systems", "value": "cargo" },
+          { "field": "tech_stack.package_managers", "value": "cargo" }
         ]
       }
     }

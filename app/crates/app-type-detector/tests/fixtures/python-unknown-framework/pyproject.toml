@@ -1,0 +1,7 @@
+[project]
+name = "mystery-tool"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "made-up-framework>=1.0",
+]

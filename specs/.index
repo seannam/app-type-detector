@@ -1,4 +1,4 @@
 spec	created	implemented	version	build	status
 # schema: v5
 0000-extract-app-type-detector-library.md	2026-04-23	2026-04-23T21:13:47	0.2.0		live
-0001-detector-default-rules-miss-common-stacks.md	2026-04-23				in_progress
+0001-detector-default-rules-miss-common-stacks.md	2026-04-23	2026-04-23T22:31:29			implemented

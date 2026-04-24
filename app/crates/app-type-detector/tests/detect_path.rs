@@ -185,6 +185,93 @@ fn chrome_extension_fixture() {
 }
 
 #[test]
+fn bun_fastify_api_fixture() {
+    let report = detect_path(fixture("bun-fastify-api")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_api"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"fastify".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("typescript")
+    );
+    assert!(report.tech_stack.runtimes.contains(&"bun".to_string()));
+    assert!(report.tech_stack.runtimes.contains(&"node".to_string()));
+}
+
+#[test]
+fn express_api_fixture() {
+    let report = detect_path(fixture("express-api")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_api"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"express".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("javascript")
+    );
+}
+
+#[test]
+fn flask_api_fixture() {
+    let report = detect_path(fixture("flask-api")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_api"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"flask".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn django_app_fixture() {
+    let report = detect_path(fixture("django-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"django".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn python_telegram_bot_fixture() {
+    let report = detect_path(fixture("python-telegram-bot")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("daemon"));
+    assert!(report
+        .tech_stack
+        .frameworks
+        .contains(&"python_telegram_bot".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn cargo_workspace_fixture() {
+    let report = detect_path(fixture("cargo-workspace")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("library"));
+    assert_eq!(report.tech_stack.languages.primary.as_deref(), Some("rust"));
+    assert!(report
+        .tech_stack
+        .build_systems
+        .contains(&"cargo".to_string()));
+}
+
+#[test]
+fn python_unknown_framework_fixture() {
+    // Baseline rules should still populate the language even when no framework
+    // rule matches, but must not claim an app_type.
+    let report = detect_path(fixture("python-unknown-framework")).unwrap();
+    assert!(report.app_type.primary.is_none());
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
 fn empty_dir_fixture() {
     let report = detect_path(fixture("empty-dir")).unwrap();
     assert!(report.app_type.primary.is_none());
