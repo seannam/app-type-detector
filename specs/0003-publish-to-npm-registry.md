@@ -1,8 +1,8 @@
-# Feature: Publish `@snam/app-type-detector` to the npm registry
+# Feature: Publish `@indiecraft/app-type-detector` to the npm registry
 
 ## Feature Description
 
-Ship the first real npm release of `@snam/app-type-detector` — a thin
+Ship the first real npm release of `@indiecraft/app-type-detector` — a thin
 [napi-rs](https://napi.rs/) binding that wraps the existing Rust core crate and
 gives Node.js consumers the same `detectPath`, `detectFiles`, `defaultRuleset`,
 and `renderHumanReadable` surface that Rust and the CLI already expose. The
@@ -17,17 +17,34 @@ The work covers three concerns:
 1. **Binding crate.** A new `app-type-detector-node` crate under
    `app/bindings/node` that depends on the core crate and exposes the four
    N-API entrypoints.
-2. **npm package.** `app/bindings/node/package.json` (`@snam/app-type-detector`),
+2. **npm package.** `app/bindings/node/package.json` (`@indiecraft/app-type-detector`),
    the loader stub (`index.js`), committed types (`index.d.ts`), a README with
    worked examples mirroring spec `0000`, and a `vitest` parity suite.
-3. **Release pipeline.** A GitHub Actions workflow that, on every git tag
-   matching `npm-v*`, builds the native addon for six triples
-   (`linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`,
-   `win32-x64-msvc`, `linux-x64-musl`), publishes one subpackage per triple
-   (`@snam/app-type-detector-linux-x64-gnu`, …), and finally publishes the
-   root `@snam/app-type-detector` package that references them as
-   `optionalDependencies`. `npm i @snam/app-type-detector` pulls exactly one
-   native subpackage matching the installer's `os`/`cpu`/`libc`.
+3. **Release pipeline.** The existing version harness under
+   `scripts/version/` is the single source of truth for bumps, tags,
+   CHANGELOG generation, and GitHub releases. We extend it — not replace
+   it — so npm releases ride the same conventional-commit → tag flow as
+   the crate:
+   - The active `rust-cargo` preset at `scripts/version/presets/rust-cargo.json`
+     gains additional `sync_targets` for every `package.json` in
+     `app/bindings/node/` (root + six triple subpackages). When
+     `auto-release-on-push.yml` runs `scripts/version/sync.sh rust-cargo <X.Y.Z>`,
+     all eight version numbers move in lockstep with `app/Cargo.toml`.
+   - A new `.github/workflows/release-npm.yml` triggers on the same
+     `v*.*.*` tag the existing `scripts/version/release.sh cut` emits
+     (`on: push: tags: ['v[0-9]+.[0-9]+.[0-9]+']`), reads the canonical
+     version via `scripts/version/current.sh --raw`, and runs a six-triple
+     build matrix (`linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`,
+     `darwin-arm64`, `win32-x64-msvc`, `linux-x64-musl`). It publishes
+     one subpackage per triple
+     (`@indiecraft/app-type-detector-linux-x64-gnu`, …) and finally the
+     root `@indiecraft/app-type-detector` package that references them as
+     `optionalDependencies`. `npm i @indiecraft/app-type-detector` pulls
+     exactly one native subpackage matching the installer's
+     `os`/`cpu`/`libc`.
+   - No separate `npm-v*` tag: the monorepo tag drives every channel,
+     and `scripts/version/release.sh` remains the only code path that
+     talks to `git tag`, `git push --tags`, or `gh release`.
 
 Zero runtime dependencies on the consumer side. No network I/O, no child
 processes, no telemetry — inherited from the core crate.
@@ -35,7 +52,7 @@ processes, no telemetry — inherited from the core crate.
 ## User Story
 
 As a Node.js developer building a tool that needs to classify a codebase,
-I want to `npm i @snam/app-type-detector` and call `detectPath("./my-project")`,
+I want to `npm i @indiecraft/app-type-detector` and call `detectPath("./my-project")`,
 So that I get the same typed `DetectionReport` the Rust crate produces, without
 running a Rust toolchain, managing a child process, or paying CGO / WASM
 overhead on every call.
@@ -55,7 +72,7 @@ subprocess, which:
   `ENOENT`/`EACCES`/PATH bootstrapping.
 - Loses the typed `DetectionReport` object: consumers must re-parse JSON and
   re-derive TypeScript types from `docs/02-output-format.md` by hand.
-- Leaves the spec-`0000` acceptance criterion `npm i @snam/app-type-detector`
+- Leaves the spec-`0000` acceptance criterion `npm i @indiecraft/app-type-detector`
   unmet.
 
 The ecosystem expects first-class Node support for a "what is this codebase?"
@@ -65,7 +82,7 @@ is documented but unbuilt.
 ## Solution Statement
 
 Build the `napi-rs` binding exactly as spec `0000` anticipated, close the
-spec-0000 acceptance gap, and release `@snam/app-type-detector@0.2.0` to
+spec-0000 acceptance gap, and release `@indiecraft/app-type-detector@0.2.0` to
 npm. Concretely:
 
 - A new `app-type-detector-node` Cargo crate (cdylib) uses `napi` +
@@ -82,16 +99,20 @@ npm. Concretely:
   Vitest tests load the committed Rust golden snapshots (copied or re-used
   from `app/crates/app-type-detector/tests/fixtures/**`) and assert
   `deepEqual`, guaranteeing parity.
-- A new `.github/workflows/release-npm.yml` fans out a build matrix on tag
-  `npm-v*`, uploads one prebuilt `.node` per platform-subpackage to npm,
-  then publishes the root package. Secrets: `NPM_TOKEN`. The root monorepo
-  auto-release workflow stays untouched — npm releases are explicitly
-  tag-triggered so that crate and npm release cadences can diverge.
-- Versioning: npm package starts at `0.2.0` to align with the current crate
-  workspace version (`app/Cargo.toml` → `version = "0.2.0"`). Future bumps
-  flow through `scripts/release-npm.sh` which sets
-  `app/bindings/node/package.json` + every subpackage's `package.json` to
-  the same SemVer in one shot.
+- A new `.github/workflows/release-npm.yml` fans out a build matrix on
+  the existing `v*.*.*` tag (the same tag `auto-release-on-push.yml` +
+  `scripts/version/release.sh cut` already emit), uploads one prebuilt
+  `.node` per platform-subpackage to npm, then publishes the root
+  package. Secrets: `NPM_TOKEN` (scoped to `@indiecraft`). The root
+  auto-release workflow stays untouched — it continues to own version
+  bumping, manifest syncing, tagging, and the GitHub release, and the
+  new workflow purely consumes its tag output.
+- Versioning: npm package starts at `0.2.0` to align with the current
+  crate workspace version (`app/Cargo.toml` → `version = "0.2.0"`).
+  Future bumps are emitted by `scripts/version/sync.sh` via the extended
+  `rust-cargo` preset — no separate bump script, no divergence risk.
+  `scripts/version/current.sh --raw` is the canonical version read
+  inside the npm workflow.
 - Docs: update the root `README.md` Node snippet to show real install and
   usage; refresh `app/bindings/node/README.md` with the worked examples
   from spec `0000`; add `docs/05-node-usage.md` (new — anticipated by spec
@@ -117,15 +138,26 @@ Use these files to implement the feature:
   library is called end-to-end; the Node binding mimics the same call path.
 - `scripts/test-all.sh` — current test runner; extend it to also run the
   Node binding tests when `pnpm` is present.
-- `scripts/version/**` — the existing auto-versioning harness; the npm
-  release workflow piggybacks on it for tag resolution but publishes on a
-  separate trigger.
+- `scripts/version/presets/rust-cargo.json` — extend `sync_targets` so
+  every `package.json` under `app/bindings/node/` (root + six
+  per-triple subpackages) syncs alongside `app/Cargo.toml` when the
+  auto-release workflow runs `sync.sh`. This is the hinge change that
+  makes the npm package ride the crate's version for free.
+- `scripts/version/current.sh` — read-only; the npm workflow calls it
+  with `--raw` to resolve the version being published.
+- `scripts/version/release.sh` — read-only; remains the sole code path
+  that creates `v*.*.*` tags and GitHub releases. The npm workflow
+  never writes tags or releases itself.
+- `scripts/version/changelog.sh` — read-only; `auto-release-on-push.yml`
+  already uses it to update `CHANGELOG.md`. The npm release inherits
+  whatever section was just appended.
 - `justfile` — add `just node-build` and `just node-test` recipes so the
   Node flow is discoverable.
 - `.github/workflows/auto-release-on-push.yml` — existing release flow;
-  leave it alone, but make sure the new npm workflow has a distinct trigger
-  (`push: tags: [npm-v*]`) and does not race.
-- `CHANGELOG.md` — append an `npm (@snam/app-type-detector) · 0.2.0` entry
+  leave it unchanged. It keeps owning "decide bump, sync manifests,
+  update CHANGELOG, commit, tag, release." The new npm workflow
+  listens for its output tag.
+- `CHANGELOG.md` — append an `npm (@indiecraft/app-type-detector) · 0.2.0` entry
   under the Unreleased block.
 
 ### New Files
@@ -148,19 +180,19 @@ Use these files to implement the feature:
 #### Distribution (npm-facing)
 
 - `app/bindings/node/package.json` — root package metadata:
-  - `"name": "@snam/app-type-detector"`
+  - `"name": "@indiecraft/app-type-detector"`
   - `"version": "0.2.0"`
   - `"main": "index.js"`, `"types": "index.d.ts"`
   - `"license": "MIT"`
   - `"os"`: `["darwin", "linux", "win32"]`
   - `"cpu"`: `["x64", "arm64"]`
-  - `"optionalDependencies"`: `{ "@snam/app-type-detector-linux-x64-gnu": "0.2.0", …one entry per triple }`
+  - `"optionalDependencies"`: `{ "@indiecraft/app-type-detector-linux-x64-gnu": "0.2.0", …one entry per triple }`
   - `"scripts"`: `{ "build": "napi build --platform --release", "build:debug": "napi build --platform", "test": "vitest run", "prepublishOnly": "napi prepublish -t npm --skip-gh-release" }`
   - `"devDependencies"`: `@napi-rs/cli`, `vitest`, `typescript`, `@types/node`.
 - `app/bindings/node/index.js` — hand-rolled loader:
   1. Detect `process.platform`, `process.arch`, and (on Linux) glibc vs musl
      via a small `isMusl()` probe copied from the `@napi-rs/cli` template.
-  2. `require('@snam/app-type-detector-' + triple)` and re-export its
+  2. `require('@indiecraft/app-type-detector-' + triple)` and re-export its
      exports.
   3. Throw a helpful error if no matching subpackage is installed
      (listing the detected triple and pointing to the GitHub issues URL).
@@ -184,7 +216,7 @@ Use these files to implement the feature:
   carrying correct `os`/`cpu`/`libc` fields and pointing at a placeholder
   `.node` file that CI writes at release time.
 - `app/bindings/node/npm/<triple>/README.md` — one-liner "internal artifact
-  of `@snam/app-type-detector`; do not install directly."
+  of `@indiecraft/app-type-detector`; do not install directly."
 
 #### Tests
 
@@ -208,19 +240,32 @@ Use these files to implement the feature:
 
 #### Release pipeline
 
-- `.github/workflows/release-npm.yml` — matrix job:
-  - `on: push: tags: ['npm-v*']`
-  - Jobs: `build-<triple>` × 6, each uploading its `.node` artifact.
-  - `publish` job downloads all artifacts, writes each into its
-    `npm/<triple>/app-type-detector.<triple>.node`, and runs
-    `napi prepublish -t npm --skip-gh-release` then `npm publish --access public`
-    for each subpackage and the root package.
-  - Uses `NPM_TOKEN` from repo secrets.
-- `scripts/release-npm.sh` — local release helper: bumps all seven
-  `package.json` files in one shot, creates `npm-v<X.Y.Z>` tag, pushes.
-  Intended for maintainer use; the CI workflow is the canonical publisher.
+- `.github/workflows/release-npm.yml` — matrix job that rides the
+  existing monorepo tag:
+  - `on: push: tags: ['v[0-9]+.[0-9]+.[0-9]+']` — the same tag
+    `scripts/version/release.sh cut` emits from
+    `auto-release-on-push.yml`. No bespoke `npm-v*` trigger.
+  - `resolve-version` job: runs `scripts/version/current.sh --raw` to
+    read the canonical version, exports it as an output so every
+    downstream job uses the same value (never parses `$GITHUB_REF_NAME`
+    itself — the version scripts are the only source of truth).
+  - `build-<triple>` × 6 jobs: each runs
+    `napi build --platform --release --target <rust-target>` and
+    uploads the `*.node` artifact.
+  - `publish` job: `needs: [resolve-version, build-<6>]`; downloads
+    every artifact, writes each into its
+    `npm/<triple>/app-type-detector.<triple>.node`, sanity-checks each
+    `package.json` version equals the resolved version (guards against
+    preset-drift), then runs `napi prepublish -t npm --skip-gh-release`
+    and `npm publish --access public` for each subpackage followed by
+    the root package.
+  - The workflow never creates tags, never runs `gh release create`,
+    and never edits `CHANGELOG.md`. All of that already happened in
+    `auto-release-on-push.yml` before this workflow fired.
+  - Secrets: `NPM_TOKEN` scoped to publish on `@indiecraft`.
 - `scripts/node-test.sh` — wraps `pnpm -C app/bindings/node install && pnpm run build:debug && pnpm test`
-  so `scripts/test-all.sh` can call it behind a feature gate.
+  so `scripts/test-all.sh` can call it behind a feature gate. Pure
+  local helper; no release duties.
 
 #### Docs
 
@@ -253,14 +298,23 @@ the Node suite when `pnpm` is available. Update `justfile` with
 
 ### Phase 3: Release pipeline and publish
 
-Author `release-npm.yml` with the six-triple matrix, per-triple subpackage
-scaffolds, and the `napi prepublish` orchestration. Wire `NPM_TOKEN`.
-Dry-run on a fork (`npm publish --dry-run`) to verify tarball contents.
-Bump all `package.json` files to `0.2.0`, tag `npm-v0.2.0`, push, and
-confirm `npm i @snam/app-type-detector` on a fresh machine correctly
-installs exactly one prebuilt subpackage and runs a hello-world detection.
-Close the spec-`0000` acceptance criterion:
-"`npm i @snam/app-type-detector` then `import { detectPath } from '@snam/app-type-detector'`
+Extend the `rust-cargo` preset at
+`scripts/version/presets/rust-cargo.json` with seven new `sync_targets`
+(one per `package.json` in `app/bindings/node/`) so the next
+auto-release-on-push run sets every npm manifest to the same version as
+`app/Cargo.toml` without any bespoke bump script. Author
+`release-npm.yml` with the six-triple matrix, per-triple subpackage
+scaffolds, and the `napi prepublish` orchestration, triggered on the
+existing `v*.*.*` tag. Wire `NPM_TOKEN`. Dry-run on a fork
+(`npm publish --dry-run`) to verify tarball contents. Merge a
+release-worthy commit to `main`; `auto-release-on-push.yml` emits
+`v0.3.0` (or whatever semver the preset picks), which in turn triggers
+`release-npm.yml`. Confirm
+`npm i @indiecraft/app-type-detector` on a fresh machine correctly
+installs exactly one prebuilt subpackage and runs a hello-world
+detection. Close the spec-`0000` acceptance criterion:
+"`npm i @indiecraft/app-type-detector` then
+`import { detectPath } from '@indiecraft/app-type-detector'`
 works on Linux x64, Linux arm64, macOS arm64, macOS x64, Windows x64".
 
 ## Step by Step Tasks
@@ -301,7 +355,7 @@ IMPORTANT: Execute every step in order, top to bottom.
 
 - Write `app/bindings/node/index.js` using the `@napi-rs/cli` loader
   pattern (runtime detection of `process.platform`, `process.arch`,
-  `isMusl()`, then `require(@snam/app-type-detector-<triple>)`).
+  `isMusl()`, then `require(@indiecraft/app-type-detector-<triple>)`).
 - Write six `app/bindings/node/npm/<triple>/package.json` skeletons with
   `"name"`, `"version": "0.2.0"`, `"os"`, `"cpu"`, `"libc"` (where
   applicable), `"main": "app-type-detector.<triple>.node"`, and a README
@@ -347,20 +401,50 @@ IMPORTANT: Execute every step in order, top to bottom.
 - Update `justfile` with `node-build`, `node-test`, and `node-pack`
   (`pnpm -C app/bindings/node pack`) recipes.
 
-### 9. Release workflow
+### 9. Extend the version preset
+
+- Edit `scripts/version/presets/rust-cargo.json` and append seven
+  entries to `sync_targets`, one per `package.json`:
+  - `{app_root}/bindings/node/package.json` (JSON selector `.version`, `primary: false`)
+  - `{app_root}/bindings/node/npm/linux-x64-gnu/package.json`
+  - `{app_root}/bindings/node/npm/linux-arm64-gnu/package.json`
+  - `{app_root}/bindings/node/npm/linux-x64-musl/package.json`
+  - `{app_root}/bindings/node/npm/darwin-x64/package.json`
+  - `{app_root}/bindings/node/npm/darwin-arm64/package.json`
+  - `{app_root}/bindings/node/npm/win32-x64-msvc/package.json`
+- Locally test by running
+  `scripts/version/sync.sh rust-cargo $(scripts/version/current.sh --raw)`
+  and confirming every `package.json` matches `app/Cargo.toml`'s version.
+- Commit the preset edit alongside the seeded `package.json` files so
+  the first post-merge `auto-release-on-push.yml` run sees them in sync.
+
+### 10. Release workflow
 
 - Create `.github/workflows/release-npm.yml`:
-  - Trigger: `on: push: tags: ['npm-v*']`.
-  - `build` job: matrix of six triples, each running `napi build --platform
-    --release --target <rust-target>`, uploading `*.node` as an artifact.
-  - `publish` job: `needs: build`; downloads every artifact, runs
-    `napi prepublish -t npm --skip-gh-release` to stage subpackage
-    directories, then `npm publish --access public` for each subpackage,
-    and finally for the root package.
-- Add the `NPM_TOKEN` secret guidance in `docs/05-node-usage.md` so future
-  maintainers can rotate it.
+  - Trigger: `on: push: tags: ['v[0-9]+.[0-9]+.[0-9]+']` — matches the
+    tag `scripts/version/release.sh cut` produces. No `npm-v*` trigger.
+  - `resolve-version` job: checks out the repo, runs
+    `VERSION=$(./scripts/version/current.sh --raw)`, exports as a job
+    output. Every downstream job consumes this, never parses the ref
+    name directly.
+  - `build-<triple>` matrix of six jobs: each runs
+    `pnpm -C app/bindings/node install --frozen-lockfile` then
+    `pnpm -C app/bindings/node exec napi build --platform --release --target <rust-target>`,
+    uploading `*.node` as an artifact.
+  - `publish` job: `needs: [resolve-version, build-*]`; downloads every
+    artifact, asserts `jq -r .version` of each `package.json` equals
+    the resolved version (fails loudly on drift), runs
+    `pnpm -C app/bindings/node exec napi prepublish -t npm --skip-gh-release`,
+    and publishes each per-triple subpackage with
+    `npm publish --access public` (setting `NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}`).
+    Publishes the root package last so atomicity is preserved (root
+    references the subpackages via `optionalDependencies`).
+  - The workflow contains zero `git tag`, `git push --tags`, or
+    `gh release` calls. Those stay exclusive to `scripts/version/release.sh`.
+- Add the `NPM_TOKEN` secret guidance in `docs/05-node-usage.md` so
+  future maintainers can rotate it.
 
-### 10. Docs
+### 11. Docs
 
 - Write `docs/05-node-usage.md` with:
   - Install snippet.
@@ -374,25 +458,37 @@ IMPORTANT: Execute every step in order, top to bottom.
 - Update the root `README.md` Quick start to include Node alongside Rust.
 - Append an `npm · 0.2.0` entry to `CHANGELOG.md`.
 
-### 11. Dry-run publish
+### 12. Dry-run publish
 
-- Bump every `package.json` in `app/bindings/node` to `0.2.0` (root +
-  six subpackages) via `scripts/release-npm.sh --dry-run`.
-- Locally: `pnpm -C app/bindings/node run build && pnpm -C app/bindings/node pack`
-  and inspect the tarball contents (must contain only `index.js`,
+- Run `scripts/version/sync.sh rust-cargo $(scripts/version/current.sh --raw)`
+  locally; verify every `package.json` under `app/bindings/node/` now
+  matches `app/Cargo.toml`'s version. Commit any preset-driven sync
+  diff.
+- `pnpm -C app/bindings/node run build && pnpm -C app/bindings/node pack`
+  — inspect the tarball contents (must contain only `index.js`,
   `index.d.ts`, `package.json`, `README.md`).
-- GitHub-dry: push a temporary tag `npm-v0.2.0-rc.1` and confirm the
-  workflow builds all six triples without errors; delete the tag.
+- `pnpm -C app/bindings/node publish --dry-run --access public` —
+  confirms npm accepts the package shape and the `@indiecraft` scope.
+- GitHub-dry: on a fork, create a prerelease tag via the real harness
+  (`./scripts/version/release.sh seed --version 0.2.0-rc.1 --prerelease`),
+  push, confirm `release-npm.yml` builds all six triples and would
+  publish, then delete the tag + release. Do not run the dry-run
+  against the main repo.
 
-### 12. Real publish
+### 13. Real publish
 
-- Tag `npm-v0.2.0` on `main` and push.
-- Wait for the release workflow to succeed.
-- On a fresh machine: `mkdir /tmp/probe && cd /tmp/probe && pnpm init -y && pnpm i @snam/app-type-detector`
-  then run `node -e "console.log(require('@snam/app-type-detector').detectPath('.').app_type)"`.
-- Confirm exactly one subpackage was installed (matching the probe's triple).
+- Merge a release-worthy commit to `main` (for example, the
+  preset-sync commit from step 9). `auto-release-on-push.yml` runs,
+  `scripts/version/release.sh cut` emits `v0.2.0` (or the next
+  conventional-commit-driven bump), and `release-npm.yml` fires on
+  that tag.
+- Wait for `release-npm.yml` to succeed (build + publish jobs green).
+- On a fresh machine: `mkdir /tmp/probe && cd /tmp/probe && pnpm init -y && pnpm i @indiecraft/app-type-detector`
+  then run `node -e "console.log(require('@indiecraft/app-type-detector').detectPath('.').app_type)"`.
+- Confirm exactly one subpackage was installed (matching the probe's
+  triple).
 
-### 13. Run full validation
+### 14. Run full validation
 
 - Execute every command in **Validation Commands**.
 
@@ -421,8 +517,10 @@ IMPORTANT: Execute every step in order, top to bottom.
   (`__test__/fixtures/memory-snapshot.test.ts`): a hand-built in-memory map
   representing the `cli-rust` fixture produces the same report as
   `detectPath` on the real directory.
-- **Release pipeline dry-run** (`npm-v0.2.0-rc.1` tag): verifies the GitHub
-  Actions workflow builds all six triples without attempting to publish.
+- **Release pipeline dry-run** (`v0.2.0-rc.1` prerelease tag seeded via
+  `scripts/version/release.sh seed --version 0.2.0-rc.1 --prerelease`
+  on a fork): verifies `release-npm.yml` builds all six triples without
+  attempting to publish to the real npm registry.
 
 ### Edge Cases
 
@@ -431,7 +529,7 @@ IMPORTANT: Execute every step in order, top to bottom.
 - Consumer installs with `--no-optional` → `index.js` throws the same error
   (no native addon available).
 - Consumer installs on an Alpine image → musl libc probe returns `true`,
-  `@snam/app-type-detector-linux-x64-musl` is loaded.
+  `@indiecraft/app-type-detector-linux-x64-musl` is loaded.
 - Fixture with non-UTF-8 file contents → the binding doesn't panic; the
   content rules silently skip matching (inherited from the core crate).
 - `detectFiles({ files: { "package.json": null } })` treats `null` as
@@ -445,10 +543,10 @@ IMPORTANT: Execute every step in order, top to bottom.
 
 ## Acceptance Criteria
 
-- [ ] `npm i @snam/app-type-detector` on a fresh machine installs exactly
+- [ ] `npm i @indiecraft/app-type-detector` on a fresh machine installs exactly
       one prebuilt subpackage matching the machine's triple and produces a
       working `detectPath(".")` call that returns a typed `DetectionReport`.
-- [ ] `import { detectPath, detectFiles, defaultRuleset, renderHumanReadable } from "@snam/app-type-detector"`
+- [ ] `import { detectPath, detectFiles, defaultRuleset, renderHumanReadable } from "@indiecraft/app-type-detector"`
       type-checks under `"strict": true` TypeScript with no `any`.
 - [ ] The Node binding's JSON output deep-equals the CLI's JSON output for
       every fixture in `app/crates/app-type-detector/tests/fixtures/`.
@@ -461,8 +559,17 @@ IMPORTANT: Execute every step in order, top to bottom.
       non-goal for this spec and is tracked in **Notes → Out of scope**.
 - [ ] The release workflow publishes atomically: if any per-triple
       subpackage publish fails, the root package is not published.
-      Implemented via job ordering (`needs: build` and
-      `needs: [build, publish-<triple>]`).
+      Implemented via job ordering (`publish` job `needs: [resolve-version, build-*]`
+      and publishes subpackages before the root package within the same job).
+- [ ] `release-npm.yml` contains zero `git tag`, `git push --tags`, or
+      `gh release` commands. `scripts/version/release.sh` remains the
+      only code path that talks to the git remote for tags / releases.
+- [ ] Version synchronization is driven by the `rust-cargo` preset's
+      extended `sync_targets`, not by a bespoke bump script. Asserted
+      by a CI check that runs
+      `scripts/version/sync.sh rust-cargo $(scripts/version/current.sh --raw) --check`
+      and fails if any `package.json` under `app/bindings/node/` drifts
+      from `app/Cargo.toml`.
 - [ ] `app/bindings/node/package.json` is not published with Rust sources:
       `npm publish --dry-run` reports only `index.js`, `index.d.ts`,
       `package.json`, `README.md`, and the `.node` artifact.
@@ -489,13 +596,15 @@ regressions.
 - `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node install --frozen-lockfile` — reproducible install
 - `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node run build` — napi build succeeds on the local triple
 - `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node test` — unit + parity + render + memory-snapshot suites pass
-- `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node pack --pack-destination /tmp && tar -tzf /tmp/snam-app-type-detector-0.2.0.tgz | sort` — published tarball contains only expected files
+- `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node pack --pack-destination /tmp && tar -tzf /tmp/indiecraft-app-type-detector-0.2.0.tgz | sort` — published tarball contains only expected files
 - `pnpm -C /Users/seannam/Developer/app-type-detector/app/bindings/node exec tsc --noEmit --project tsconfig.json` — TS surface compiles under strict mode
 - `cd /Users/seannam/Developer/app-type-detector && bash scripts/test-all.sh` — aggregated Rust + Node suite
 - `cd /Users/seannam/Developer/app-type-detector && bash scripts/node-test.sh` — Node-only shortcut
+- `cd /Users/seannam/Developer/app-type-detector && scripts/version/sync.sh rust-cargo $(scripts/version/current.sh --raw)` — re-sync every manifest in the extended rust-cargo preset and confirm no drift between `app/Cargo.toml` and the seven `package.json` files under `app/bindings/node/`
+- `cd /Users/seannam/Developer/app-type-detector && jq -r .version app/bindings/node/package.json app/bindings/node/npm/*/package.json | sort -u` — exactly one line of output, equal to `$(scripts/version/current.sh --raw)`; multiple lines means drift
 - `cd /Users/seannam/Developer/app-type-detector && act -j build --matrix triple:darwin-arm64 -W .github/workflows/release-npm.yml` — optional local dry-run of the release workflow via `act`; skip if `act` is unavailable
-- `cd /tmp && rm -rf npm-probe && mkdir npm-probe && cd npm-probe && pnpm init -y && pnpm i @snam/app-type-detector@0.2.0 && node -e "const d = require('@snam/app-type-detector'); console.log(d.detectPath(process.cwd()).app_type.primary)"` — post-publish end-to-end smoke test on a fresh directory
-- `grep -RIn "app-type-detector" /tmp/npm-probe/node_modules/@snam/ | head -20` — confirms exactly one native subpackage landed
+- `cd /tmp && rm -rf npm-probe && mkdir npm-probe && cd npm-probe && pnpm init -y && pnpm i @indiecraft/app-type-detector@0.2.0 && node -e "const d = require('@indiecraft/app-type-detector'); console.log(d.detectPath(process.cwd()).app_type.primary)"` — post-publish end-to-end smoke test on a fresh directory
+- `grep -RIn "app-type-detector" /tmp/npm-probe/node_modules/@indiecraft/ | head -20` — confirms exactly one native subpackage landed
 
 ## Notes
 
@@ -509,17 +618,23 @@ regressions.
   `@types/node` (dev). All live in `app/bindings/node/package.json`.
 - **Why napi-rs, not WASM as the default?** Native addons hit native-FS
   speeds and avoid a sync-FS shim for `detectPath`. WASM is deferred to a
-  follow-up spec (fallback subpackage `@snam/app-type-detector-wasm32-wasi`)
+  follow-up spec (fallback subpackage `@indiecraft/app-type-detector-wasm32-wasi`)
   so Edge / Cloudflare Workers can consume the library. Deferring WASM keeps
   the initial matrix small and unblocks the spec-`0000` acceptance criterion.
-- **Why publish on a separate tag trigger (`npm-v*`) instead of riding the
-  existing `auto-release-on-push.yml`?** Crate and npm release cadences
-  will diverge: the Rust crate bumps on every qualifying commit, but native
-  binary builds take 10–15 minutes across six runners and should be
-  explicitly gated. The monorepo tag carries the app's marketing version;
-  per-channel tags (`npm-vX.Y.Z`, `crate-vX.Y.Z`, `pypi-vX.Y.Z`) carry the
-  publish trigger — the pattern spec `0000` anticipated and what
-  `CHANGELOG.md` already splits by channel.
+- **Why ride the existing `v*.*.*` tag instead of a bespoke `npm-v*`
+  trigger?** Because `scripts/version/release.sh` is already the sole
+  authority on tags and GitHub releases, and the `rust-cargo` preset is
+  the single source of truth for what version a given commit is. Adding
+  a parallel `npm-v*` tag scheme would create two versioning worlds
+  that could drift, duplicate the bump-decision logic, and violate the
+  "one script owns the git remote" invariant that `release.sh` enforces.
+  The npm workflow is a pure consumer: it listens for the monorepo tag
+  the harness already emits. The six-triple build matrix takes 10–15
+  minutes but runs in parallel and runs only on tag pushes (not on
+  every `main` commit), which is a strict subset of release-worthy
+  events — no gating needed beyond the tag filter. Per-channel
+  CHANGELOG sections in `CHANGELOG.md` still make sense for human
+  readability, but they no longer imply per-channel tags.
 - **Version alignment at launch.** We launch npm at `0.2.0` (matching the
   current crate) rather than `0.1.0` because the crate has already shipped
   a `0.2.0` on crates.io workspace-wide, and consumers expect the
@@ -533,7 +648,9 @@ regressions.
 - **Security.** No `postinstall` script. No network I/O at runtime. No
   binary downloads at install time (optional-deps replace that pattern
   entirely). The `NPM_TOKEN` secret scope is "Publish → Packages" limited
-  to the `@snam` scope.
-- **Future: automatic CI bump on crate release.** Once confidence is high,
-  `auto-release-on-push.yml` can dispatch `release-npm.yml` with the same
-  version number, collapsing the two triggers. Out of scope for this spec.
+  to the `@indiecraft` scope.
+- **Harness-first by design.** The crate and the npm package now share
+  one version pipeline. Any future channel (PyPI, WASM fallback,
+  crates.io re-publish) is a preset `sync_targets` extension plus a
+  new tag-triggered publish workflow. The pattern is: extend the
+  preset, listen to the existing tag, never add a new tag scheme.
