@@ -660,7 +660,7 @@ Neither file is read by the library; neither tool's vocabulary is adopted verbat
 - `docs/08-extending.md` — adding a new rule.
 - `docs/09-consumer-mapping.md` — the recommended pattern for downstream tools.
 - `docs/RULES.md` — generated reference of every bundled rule.
-- `ai_docs/napi-rs-overview.md`, `ai_docs/pyo3-maturin-overview.md`.
+- `docs/napi-rs-overview.md`, `docs/pyo3-maturin-overview.md`.
 
 #### Project metadata
 
