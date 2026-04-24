@@ -7,11 +7,15 @@ npm/
 target/
 tests/
 node_modules/
+artifacts/
 Cargo.toml
 Cargo.lock
 build.rs
 tsconfig.json
 vitest.config.ts
+pnpm-lock.yaml
+.napi-autogen.d.ts
+*.node
 .eslintrc*
 .prettierrc*
 *.log

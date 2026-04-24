@@ -63,7 +63,7 @@ dependencies = [
 
 [[package]]
 name = "app-type-detector"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "globset",
  "once_cell",
@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "app-type-detector-cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "app-type-detector",
  "assert_cmd",
@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "app-type-detector-node"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "app-type-detector",
  "napi",

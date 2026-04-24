@@ -103,11 +103,11 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: app/bindings/node/pnpm-lock.yaml
 
@@ -140,9 +140,11 @@ jobs:
     name: Publish to npm
     needs: [resolve-version, build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC)
     env:
       VERSION: ${{ needs.resolve-version.outputs.version }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -150,15 +152,19 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: app/bindings/node/pnpm-lock.yaml
           registry-url: 'https://registry.npmjs.org'
-          always-auth: true
+
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1. Pin a specific
+      # release rather than `npm@latest`: latest can land broken
+      # (MODULE_NOT_FOUND: promise-retry in some 11.x publishes).
+      - run: npm install -g npm@11.5.1
 
       - name: Install Node dependencies
         run: pnpm -C app/bindings/node install --frozen-lockfile
@@ -195,12 +201,17 @@ jobs:
             exit 1
           fi
 
+      # No NODE_AUTH_TOKEN: npm exchanges the GitHub OIDC token for a
+      # short-lived publish credential after Trusted Publisher is
+      # configured on the package's npm settings page (or auto-created
+      # on first publish from a matching workflow). Provenance is
+      # generated automatically under OIDC, no --provenance flag.
       - name: Publish per-triple subpackages
         run: |
           set -euo pipefail
           for triple in linux-x64-gnu linux-arm64-gnu linux-x64-musl darwin-x64 darwin-arm64 win32-x64-msvc; do
             echo "::group::publishing @indiecraft/app-type-detector-${triple}@${VERSION}"
-            (cd "app/bindings/node/npm/${triple}" && npm publish --access public --provenance)
+            (cd "app/bindings/node/npm/${triple}" && npm publish --access public)
             echo "::endgroup::"
           done
 
@@ -208,5 +219,5 @@ jobs:
         run: |
           set -euo pipefail
           echo "::group::publishing @indiecraft/app-type-detector@${VERSION}"
-          (cd app/bindings/node && npm publish --access public --provenance)
+          (cd app/bindings/node && npm publish --access public)
           echo "::endgroup::"

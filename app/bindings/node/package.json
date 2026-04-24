@@ -49,8 +49,8 @@
     "@indiecraft/app-type-detector-win32-x64-msvc": "0.3.0"
   },
   "scripts": {
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --platform --release --dts .napi-autogen.d.ts",
+    "build:debug": "napi build --platform --dts .napi-autogen.d.ts",
     "test": "vitest run",
     "prepublishOnly": "napi prepublish -t npm --skip-gh-release"
   },
