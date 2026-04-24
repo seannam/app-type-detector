@@ -1,4 +1,4 @@
-// Required to emit the N-API linker flags for the `cdylib` crate.
+// Required to emit the N-API linker flags for the cdylib crate.
 extern crate napi_build;
 
 fn main() {

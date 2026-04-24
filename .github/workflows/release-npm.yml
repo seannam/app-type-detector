@@ -111,7 +111,10 @@ jobs:
             setup: sudo apt-get update && sudo apt-get install -y musl-tools
             build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-unknown-linux-musl
           - triple: darwin-x64
-            os: macos-13
+            # macos-13 hosted runners are scarce / nearing EOL. macos-14
+            # (arm64) can cross-compile to x86_64-apple-darwin via Rust's
+            # own target flag; no extra SDK setup required on arm macs.
+            os: macos-14
             target: x86_64-apple-darwin
             build: pnpm -C app/bindings/node exec napi build --platform --release --target x86_64-apple-darwin
           - triple: darwin-arm64
