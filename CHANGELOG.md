@@ -1,3 +1,12 @@
+# Changelog
+
+## [0.2.0] - 2026-04-24
+
+### New
+
+- extract app-type-detector library, CLI, fixtures, and docs
+- initial commit
+
 ## Unreleased
 
 _Adopted by /version:adopt; prior history below is preserved as-is._
