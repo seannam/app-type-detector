@@ -1,6 +1,6 @@
 {
   "name": "@indiecraft/app-type-detector-linux-arm64-gnu",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Prebuilt linux-arm64 (glibc) binary for @indiecraft/app-type-detector. Installed automatically as an optional dependency; do not install directly.",
   "license": "MIT",
   "repository": {

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0] - 2026-04-24
+
+### New
+
+- publish @indiecraft/app-type-detector to npm
+- expand default ruleset to cover 10 new real-world stacks
+
+### Fixes
+
+- expand default ruleset to cover Bun/Fastify, Python bots, Rust workspaces
+
+
 ## [0.2.0] - 2026-04-24
 
 ### New
