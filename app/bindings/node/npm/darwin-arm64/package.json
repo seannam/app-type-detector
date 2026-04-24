@@ -1,6 +1,6 @@
 {
   "name": "@indiecraft/app-type-detector-darwin-arm64",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Prebuilt macOS arm64 binary for @indiecraft/app-type-detector. Installed automatically as an optional dependency; do not install directly.",
   "license": "MIT",
   "repository": {

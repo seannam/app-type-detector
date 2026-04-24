@@ -1,6 +1,6 @@
 {
   "name": "@indiecraft/app-type-detector-win32-x64-msvc",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Prebuilt Windows x64 (MSVC) binary for @indiecraft/app-type-detector. Installed automatically as an optional dependency; do not install directly.",
   "license": "MIT",
   "repository": {

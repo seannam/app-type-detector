@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.4] - 2026-04-24
+
+
+### Fixes
+
+- run darwin-x64 build on macos-14 (cross-compile)
+
+
 ## [0.3.3] - 2026-04-24
 
 
