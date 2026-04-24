@@ -1,16 +1,23 @@
-# Publish @indiecraft/app-type-detector to npm on a v*.*.* tag push.
+# Publish @indiecraft/app-type-detector to npm after Auto Release
+# successfully cuts a tag.
 #
-# Rides the canonical monorepo tag emitted by
-# scripts/version/release.sh (from auto-release-on-push.yml). This
-# workflow never creates tags, GitHub releases, or CHANGELOG entries;
-# those responsibilities stay exclusive to the version harness.
+# We cannot trigger on `push: tags: ['v*']` because Auto Release pushes
+# tags as `github-actions[bot]` (via the default GITHUB_TOKEN), and
+# GitHub intentionally blocks events produced by GITHUB_TOKEN from
+# starting new workflow runs. `workflow_run` is explicitly exempt from
+# that rule, so we listen for Auto Release to complete, then derive the
+# version from the latest git tag.
+#
+# This workflow never creates tags, GitHub releases, or CHANGELOG
+# entries; those responsibilities stay exclusive to the version harness.
 
 name: Release (npm)
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_run:
+    workflows: ["Auto Release"]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: release-npm
@@ -24,8 +31,12 @@ jobs:
   resolve-version:
     name: Resolve canonical version
     runs-on: ubuntu-latest
+    # Only proceed when the upstream Auto Release succeeded. Skipped or
+    # failed runs (no new tag cut) leave nothing for us to publish.
+    if: github.event.workflow_run.conclusion == 'success'
     outputs:
       version: ${{ steps.resolve.outputs.version }}
+      should_publish: ${{ steps.resolve.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,9 +46,22 @@ jobs:
         id: resolve
         run: |
           set -euo pipefail
+          # workflow_run runs on the default branch, so git tag listing
+          # and current.sh --raw see the freshly-pushed tag.
+          git fetch --tags origin
           VERSION="$(./scripts/version/current.sh --raw)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Canonical version: $VERSION"
+          # Self-skip if the root package@version is already live on npm
+          # (idempotency guard: Auto Release fires on every main push,
+          # including non-release-worthy commits, so we may wake up
+          # without a new tag to publish).
+          if npm view "@indiecraft/app-type-detector@${VERSION}" version >/dev/null 2>&1; then
+            echo "@indiecraft/app-type-detector@${VERSION} is already published on npm; skipping."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Assert manifests are in sync with the canonical version
         run: |
@@ -67,6 +91,7 @@ jobs:
   build:
     name: Build ${{ matrix.triple }}
     needs: [resolve-version]
+    if: needs.resolve-version.outputs.should_publish == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -139,6 +164,7 @@ jobs:
   publish:
     name: Publish to npm
     needs: [resolve-version, build]
+    if: needs.resolve-version.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
