@@ -1,0 +1,10 @@
+[build]
+# Workspace defaults.
+
+[profile.dev]
+opt-level = 0
+
+[target.'cfg(all())']
+rustflags = [
+    "-Dunsafe_code",
+]

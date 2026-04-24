@@ -1,0 +1,40 @@
+[package]
+name = "app-type-detector"
+description = "Detect app type, tech stack, and explainable scorecard for any codebase."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "../../../README.md"
+keywords = ["detector", "codebase", "tech-stack", "classification", "repo"]
+categories = ["development-tools", "parsing"]
+
+[features]
+default = ["fs", "serde", "default-rules", "human-renderer"]
+fs = ["dep:walkdir"]
+serde = []
+default-rules = []
+human-renderer = []
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+regex = { workspace = true }
+globset = { workspace = true }
+walkdir = { workspace = true, optional = true }
+once_cell = { workspace = true }
+thiserror = { workspace = true }
+
+[build-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+walkdir = { workspace = true }
+
+[lib]
+name = "app_type_detector"
+path = "src/lib.rs"

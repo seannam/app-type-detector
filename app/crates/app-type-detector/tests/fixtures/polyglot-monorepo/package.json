@@ -1,0 +1,5 @@
+{
+  "name": "monorepo-js",
+  "version": "0.1.0",
+  "types": "dist/index.d.ts"
+}

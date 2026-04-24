@@ -1,0 +1,8 @@
+{
+  "name": "my-astro-site",
+  "private": true,
+  "scripts": { "dev": "astro dev", "build": "astro build" },
+  "dependencies": {
+    "astro": "4.10.0"
+  }
+}

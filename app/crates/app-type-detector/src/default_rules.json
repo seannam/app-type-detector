@@ -1,0 +1,613 @@
+{
+  "schema_version": 1,
+  "version": "0.1.0",
+  "rules": [
+    {
+      "id": "unity-engine",
+      "description": "Unity game engine project.",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "ProjectSettings/ProjectSettings.asset" },
+          { "kind": "content", "file": "ProjectSettings/ProjectVersion.txt", "regex": "m_EditorVersion:\\s*(\\S+)" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "game", "delta": 1.0 },
+          { "field": "tech_stack.game.engines", "value": "unity" },
+          { "field": "tech_stack.languages", "value": "csharp" },
+          { "field": "tech_stack.build_systems", "value": "unity" },
+          { "field": "tech_stack.package_managers", "value": "nuget" },
+          { "field": "tech_stack.package_managers", "value": "unity_package_manager" },
+          { "field": "tech_stack.runtimes", "value": "mono" },
+          { "field": "tech_stack.game.physics_engines", "value": "physx" }
+        ],
+        "captures_into": {
+          "from_file": "ProjectSettings/ProjectVersion.txt",
+          "field": "tech_stack.game.engine_version"
+        }
+      }
+    },
+    {
+      "id": "unity-urp-pipeline",
+      "when": {
+        "kind": "content",
+        "file": "Packages/manifest.json",
+        "regex": "com\\.unity\\.render-pipelines\\.universal"
+      },
+      "payload": {
+        "confidence_weight": 0.6,
+        "contributions": [
+          { "field": "tech_stack.game.rendering_pipelines", "value": "urp" }
+        ]
+      }
+    },
+    {
+      "id": "unity-hdrp-pipeline",
+      "when": {
+        "kind": "content",
+        "file": "Packages/manifest.json",
+        "regex": "com\\.unity\\.render-pipelines\\.high-definition"
+      },
+      "payload": {
+        "confidence_weight": 0.6,
+        "contributions": [
+          { "field": "tech_stack.game.rendering_pipelines", "value": "hdrp" }
+        ]
+      }
+    },
+    {
+      "id": "shaderlab-and-hlsl",
+      "when": {
+        "kind": "glob",
+        "pattern": "Assets/**/*.shader"
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "tech_stack.game.shader_languages", "value": "shaderlab" },
+          { "field": "tech_stack.game.shader_languages", "value": "hlsl" },
+          { "field": "tech_stack.languages", "value": "hlsl" },
+          { "field": "tech_stack.languages", "value": "shaderlab" }
+        ]
+      }
+    },
+    {
+      "id": "godot-engine",
+      "when": { "kind": "file_exists", "path": "project.godot" },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "game", "delta": 1.0 },
+          { "field": "tech_stack.game.engines", "value": "godot" },
+          { "field": "tech_stack.languages", "value": "gdscript" },
+          { "field": "tech_stack.build_systems", "value": "godot" }
+        ],
+        "captures_into": {
+          "from_file": "project.godot",
+          "field": "tech_stack.game.engine_version"
+        }
+      }
+    },
+    {
+      "id": "bevy-engine",
+      "when": {
+        "kind": "content",
+        "file": "Cargo.toml",
+        "regex": "bevy\\s*="
+      },
+      "payload": {
+        "confidence_weight": 1.5,
+        "contributions": [
+          { "field": "app_type", "value": "game", "delta": 1.5 },
+          { "field": "tech_stack.game.engines", "value": "bevy" },
+          { "field": "tech_stack.languages", "value": "rust" },
+          { "field": "tech_stack.build_systems", "value": "cargo" },
+          { "field": "tech_stack.package_managers", "value": "cargo" }
+        ]
+      }
+    },
+    {
+      "id": "nextjs-app",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"next\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "nextjs" },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "react" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "astro-static-site",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"astro\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "static_site", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "astro" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" }
+        ]
+      }
+    },
+    {
+      "id": "fastapi-api",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "fastapi" },
+          { "kind": "content", "file": "requirements.txt", "regex": "fastapi" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_api", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "fastapi" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" },
+          { "field": "tech_stack.platforms", "value": "web" }
+        ]
+      }
+    },
+    {
+      "id": "swiftui-ios-app",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "glob", "pattern": "**/*.xcodeproj/project.pbxproj" },
+          { "kind": "glob", "pattern": "**/*.swift" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "mobile_app", "delta": 1.0 },
+          { "field": "tech_stack.mobile.ui_frameworks", "value": "swiftui" },
+          { "field": "tech_stack.platforms", "value": "ios" },
+          { "field": "tech_stack.languages", "value": "swift" },
+          { "field": "tech_stack.build_systems", "value": "xcode" },
+          { "field": "tech_stack.package_managers", "value": "swift_package_manager" }
+        ]
+      }
+    },
+    {
+      "id": "jetpack-compose-android",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "build.gradle.kts" },
+          { "kind": "glob", "pattern": "**/*.kt" },
+          { "kind": "content", "file": "build.gradle.kts", "regex": "androidx\\.compose" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "mobile_app", "delta": 1.0 },
+          { "field": "tech_stack.mobile.ui_frameworks", "value": "jetpack_compose" },
+          { "field": "tech_stack.platforms", "value": "android" },
+          { "field": "tech_stack.languages", "value": "kotlin" },
+          { "field": "tech_stack.build_systems", "value": "gradle" },
+          { "field": "tech_stack.package_managers", "value": "gradle" }
+        ]
+      }
+    },
+    {
+      "id": "tauri-desktop",
+      "when": {
+        "kind": "file_exists",
+        "path": "src-tauri/tauri.conf.json"
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "desktop_app", "delta": 1.0 },
+          { "field": "tech_stack.desktop.shells", "value": "tauri" },
+          { "field": "tech_stack.languages", "value": "rust" },
+          { "field": "tech_stack.build_systems", "value": "cargo" }
+        ]
+      }
+    },
+    {
+      "id": "electron-desktop",
+      "when": {
+        "kind": "content",
+        "file": "package.json",
+        "regex": "\"electron\"\\s*:"
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "desktop_app", "delta": 1.0 },
+          { "field": "tech_stack.desktop.shells", "value": "electron" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
+        ]
+      }
+    },
+    {
+      "id": "mcp-server-typescript",
+      "when": {
+        "kind": "content",
+        "file": "package.json",
+        "regex": "@modelcontextprotocol/sdk"
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "mcp_server", "delta": 1.0 },
+          { "field": "tech_stack.extension.host", "value": "mcp_client" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
+        ]
+      }
+    },
+    {
+      "id": "mcp-server-python",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "mcp" },
+          { "kind": "content", "file": "requirements.txt", "regex": "mcp" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "mcp_server", "delta": 0.8 },
+          { "field": "tech_stack.extension.host", "value": "mcp_client" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "claude-skill",
+      "when": { "kind": "file_exists", "path": "SKILL.md" },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "claude_skill", "delta": 1.0 },
+          { "field": "tech_stack.extension.host", "value": "claude_code" },
+          { "field": "tech_stack.extension.kind", "value": "skill" }
+        ]
+      }
+    },
+    {
+      "id": "chrome-extension",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "manifest.json" },
+          { "kind": "content", "file": "manifest.json", "regex": "manifest_version" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "browser_extension", "delta": 0.9 },
+          { "field": "tech_stack.extension.host", "value": "chrome" },
+          { "field": "tech_stack.extension.kind", "value": "browser_extension" },
+          { "field": "tech_stack.languages", "value": "javascript" }
+        ]
+      }
+    },
+    {
+      "id": "vscode-extension",
+      "when": {
+        "kind": "content",
+        "file": "package.json",
+        "regex": "\"vscode\"\\s*:"
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "editor_extension", "delta": 0.9 },
+          { "field": "tech_stack.extension.host", "value": "vscode" },
+          { "field": "tech_stack.extension.kind", "value": "editor_extension" },
+          { "field": "tech_stack.languages", "value": "typescript" }
+        ]
+      }
+    },
+    {
+      "id": "wordpress-plugin",
+      "when": {
+        "kind": "glob",
+        "pattern": "**/*.php"
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "php" }
+        ]
+      }
+    },
+    {
+      "id": "rust-cargo-library",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "Cargo.toml" },
+          { "kind": "content", "file": "Cargo.toml", "regex": "\\[lib\\]" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.8 },
+          { "field": "tech_stack.languages", "value": "rust" },
+          { "field": "tech_stack.build_systems", "value": "cargo" },
+          { "field": "tech_stack.package_managers", "value": "cargo" }
+        ]
+      }
+    },
+    {
+      "id": "rust-cargo-cli",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "Cargo.toml" },
+          { "kind": "any", "of": [
+            { "kind": "file_exists", "path": "src/main.rs" },
+            { "kind": "content", "file": "Cargo.toml", "regex": "\\[\\[bin\\]\\]" }
+          ]},
+          { "kind": "not", "of": { "kind": "content", "file": "Cargo.toml", "regex": "\\[lib\\]" } }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.8 },
+          { "field": "tech_stack.languages", "value": "rust" },
+          { "field": "tech_stack.build_systems", "value": "cargo" },
+          { "field": "tech_stack.package_managers", "value": "cargo" }
+        ]
+      }
+    },
+    {
+      "id": "python-cli-pyproject",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "pyproject.toml" },
+          { "kind": "content", "file": "pyproject.toml", "regex": "\\[project\\.scripts\\]" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.6,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.6 },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "typescript-library",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"types\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.4 },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
+        ]
+      }
+    },
+    {
+      "id": "prisma-postgres",
+      "when": {
+        "kind": "content",
+        "file": "prisma/schema.prisma",
+        "regex": "provider\\s*=\\s*\"postgresql\""
+      },
+      "payload": {
+        "confidence_weight": 0.7,
+        "contributions": [
+          { "field": "tech_stack.web.orms", "value": "prisma" },
+          { "field": "tech_stack.databases", "value": "postgres" }
+        ]
+      }
+    },
+    {
+      "id": "tailwindcss",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "tailwind.config.ts" },
+          { "kind": "file_exists", "path": "tailwind.config.js" },
+          { "kind": "file_exists", "path": "tailwind.config.mjs" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "tech_stack.web.css_frameworks", "value": "tailwindcss" }
+        ]
+      }
+    },
+    {
+      "id": "stripe-payments",
+      "when": {
+        "kind": "content",
+        "file": "package.json",
+        "regex": "\"stripe\"\\s*:"
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "tech_stack.payment_processors", "value": "stripe" }
+        ]
+      }
+    },
+    {
+      "id": "docker-compose-redis",
+      "when": {
+        "kind": "content",
+        "file": "docker-compose.yml",
+        "regex": "image:\\s*redis"
+      },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "tech_stack.caches", "value": "redis" },
+          { "field": "tech_stack.databases", "value": "redis" },
+          { "field": "tech_stack.containerization", "value": "docker" }
+        ]
+      }
+    },
+    {
+      "id": "dockerfile",
+      "when": { "kind": "file_exists", "path": "Dockerfile" },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.containerization", "value": "docker" }
+        ]
+      }
+    },
+    {
+      "id": "vitest-config",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "vitest.config.ts" },
+          { "kind": "file_exists", "path": "vitest.config.js" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.testing", "value": "vitest" }
+        ]
+      }
+    },
+    {
+      "id": "eslintrc",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": ".eslintrc.json" },
+          { "kind": "file_exists", "path": ".eslintrc.js" },
+          { "kind": "file_exists", "path": "eslint.config.js" },
+          { "kind": "file_exists", "path": "eslint.config.mjs" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.linting", "value": "eslint" }
+        ]
+      }
+    },
+    {
+      "id": "github-actions",
+      "when": {
+        "kind": "glob",
+        "pattern": ".github/workflows/*.yml"
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.ci", "value": "github_actions" }
+        ]
+      }
+    },
+    {
+      "id": "pytest-config",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "pytest.ini" },
+          { "kind": "content", "file": "pyproject.toml", "regex": "\\[tool\\.pytest\\.ini_options\\]" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.testing", "value": "pytest" }
+        ]
+      }
+    },
+    {
+      "id": "ruff-config",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "ruff.toml" },
+          { "kind": "content", "file": "pyproject.toml", "regex": "\\[tool\\.ruff\\]" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.linting", "value": "ruff" }
+        ]
+      }
+    },
+    {
+      "id": "clippy-implicit",
+      "when": { "kind": "file_exists", "path": "Cargo.toml" },
+      "payload": {
+        "confidence_weight": 0.05,
+        "contributions": [
+          { "field": "tech_stack.linting", "value": "clippy" },
+          { "field": "tech_stack.testing", "value": "cargo_test" },
+          { "field": "tech_stack.formatting", "value": "rustfmt" }
+        ]
+      }
+    },
+    {
+      "id": "go-module",
+      "when": { "kind": "file_exists", "path": "go.mod" },
+      "payload": {
+        "confidence_weight": 0.5,
+        "contributions": [
+          { "field": "tech_stack.languages", "value": "go" },
+          { "field": "tech_stack.build_systems", "value": "go" },
+          { "field": "tech_stack.package_managers", "value": "go_modules" },
+          { "field": "tech_stack.runtimes", "value": "go" }
+        ]
+      }
+    },
+    {
+      "id": "terraform",
+      "when": { "kind": "glob", "pattern": "**/*.tf" },
+      "payload": {
+        "confidence_weight": 0.2,
+        "contributions": [
+          { "field": "tech_stack.iac", "value": "terraform" }
+        ]
+      }
+    }
+  ]
+}

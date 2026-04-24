@@ -2,6 +2,11 @@
 .screenshots/
 .secrets/
 
+# Rust build output
+/app/target/
+app/target/
+**/target/
+
 # macOS
 .DS_Store
 .AppleDouble
