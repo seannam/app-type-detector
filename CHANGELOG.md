@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.3] - 2026-04-24
+
+
+### Fixes
+
+- tighten build.rs comment wording
+- drop --frozen-lockfile; sync.sh bumps optionalDependencies
+
+
 ## [0.3.2] - 2026-04-24
 
 
