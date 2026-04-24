@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "rules": [
     {
       "id": "unity-engine",
@@ -334,14 +334,48 @@
     },
     {
       "id": "wordpress-plugin",
+      "description": "WordPress plugin identified via composer.json type or WordPress dependency.",
       "when": {
-        "kind": "glob",
-        "pattern": "**/*.php"
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "composer.json" },
+          {
+            "kind": "any",
+            "of": [
+              { "kind": "content", "file": "composer.json", "regex": "\"type\"\\s*:\\s*\"wordpress-plugin\"" },
+              { "kind": "content", "file": "composer.json", "regex": "wpackagist|wordpress/wordpress" }
+            ]
+          }
+        ]
       },
       "payload": {
-        "confidence_weight": 0.2,
+        "confidence_weight": 1.0,
         "contributions": [
-          { "field": "tech_stack.languages", "value": "php" }
+          { "field": "app_type", "value": "cms_plugin", "delta": 1.0 },
+          { "field": "tech_stack.languages", "value": "php" },
+          { "field": "tech_stack.frameworks", "value": "wordpress" }
+        ]
+      }
+    },
+    {
+      "id": "obsidian-plugin",
+      "description": "Obsidian editor plugin with manifest.json + versions.json + minAppVersion.",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "manifest.json" },
+          { "kind": "file_exists", "path": "versions.json" },
+          { "kind": "content", "file": "manifest.json", "regex": "\"minAppVersion\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "editor_extension", "delta": 1.0 },
+          { "field": "tech_stack.extension.host", "value": "obsidian" },
+          { "field": "tech_stack.extension.kind", "value": "plugin" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
         ]
       }
     },
@@ -901,6 +935,383 @@
           { "field": "tech_stack.languages", "value": "rust" },
           { "field": "tech_stack.build_systems", "value": "cargo" },
           { "field": "tech_stack.package_managers", "value": "cargo" }
+        ]
+      }
+    },
+    {
+      "id": "spm-library",
+      "description": "Swift Package Manager library (Package.swift with no xcodeproj, no executable target).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "Package.swift" },
+          { "kind": "not", "of": { "kind": "glob", "pattern": "**/*.xcodeproj/project.pbxproj" } },
+          { "kind": "not", "of": { "kind": "content", "file": "Package.swift", "regex": "(?s)\\.executableTarget|\\.executable\\s*\\(" } }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.8 },
+          { "field": "tech_stack.languages", "value": "swift" },
+          { "field": "tech_stack.package_managers", "value": "swift_package_manager" },
+          { "field": "tech_stack.build_systems", "value": "swift_package_manager" }
+        ]
+      }
+    },
+    {
+      "id": "spm-executable",
+      "description": "Swift Package Manager executable (Package.swift with executableTarget or .executable product).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "Package.swift" },
+          { "kind": "content", "file": "Package.swift", "regex": "(?s)\\.executableTarget|\\.executable\\s*\\(" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.9 },
+          { "field": "tech_stack.languages", "value": "swift" },
+          { "field": "tech_stack.package_managers", "value": "swift_package_manager" },
+          { "field": "tech_stack.build_systems", "value": "swift_package_manager" }
+        ]
+      }
+    },
+    {
+      "id": "node-cli-tool",
+      "description": "Node/JS CLI tool (package.json with \"bin\" field, no web framework).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"bin\"\\s*:" },
+          {
+            "kind": "not",
+            "of": {
+              "kind": "any",
+              "of": [
+                { "kind": "content", "file": "package.json", "regex": "\"next\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"astro\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"fastify\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"express\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"hono\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"koa\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"remix\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@remix-run/" },
+                { "kind": "content", "file": "package.json", "regex": "@sveltejs/kit" },
+                { "kind": "content", "file": "package.json", "regex": "\"nuxt\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"gatsby\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@angular/core" },
+                { "kind": "content", "file": "package.json", "regex": "\"vue\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"electron\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@modelcontextprotocol/sdk" }
+              ]
+            }
+          }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.8,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.8 },
+          { "field": "tech_stack.languages", "value": "javascript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
+        ]
+      }
+    },
+    {
+      "id": "node-library",
+      "description": "Node/JS library (package.json with \"main\" or \"exports\", no web framework and no CLI bin).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          {
+            "kind": "any",
+            "of": [
+              { "kind": "content", "file": "package.json", "regex": "\"main\"\\s*:" },
+              { "kind": "content", "file": "package.json", "regex": "\"exports\"\\s*:" }
+            ]
+          },
+          {
+            "kind": "not",
+            "of": {
+              "kind": "any",
+              "of": [
+                { "kind": "content", "file": "package.json", "regex": "\"bin\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"next\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"astro\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"fastify\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"express\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"hono\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"koa\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"remix\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@remix-run/" },
+                { "kind": "content", "file": "package.json", "regex": "@sveltejs/kit" },
+                { "kind": "content", "file": "package.json", "regex": "\"nuxt\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"gatsby\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@angular/core" },
+                { "kind": "content", "file": "package.json", "regex": "\"vue\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "\"electron\"\\s*:" },
+                { "kind": "content", "file": "package.json", "regex": "@modelcontextprotocol/sdk" }
+              ]
+            }
+          }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.5,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.5 },
+          { "field": "tech_stack.languages", "value": "javascript" },
+          { "field": "tech_stack.runtimes", "value": "node" }
+        ]
+      }
+    },
+    {
+      "id": "remix-app",
+      "description": "Remix web app (React).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          {
+            "kind": "any",
+            "of": [
+              { "kind": "content", "file": "package.json", "regex": "@remix-run/" },
+              { "kind": "content", "file": "package.json", "regex": "\"remix\"\\s*:" }
+            ]
+          }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "remix" },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "react" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "sveltekit-app",
+      "description": "SvelteKit web app.",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "@sveltejs/kit" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "sveltekit" },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "svelte" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "nuxt-app",
+      "description": "Nuxt web app (Vue).",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "nuxt.config.ts" },
+          { "kind": "file_exists", "path": "nuxt.config.js" },
+          { "kind": "content", "file": "package.json", "regex": "\"nuxt\"\\s*:" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "nuxt" },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "vue" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "gatsby-site",
+      "description": "Gatsby static site (React).",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "gatsby-config.js" },
+          { "kind": "file_exists", "path": "gatsby-config.ts" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "static_site", "delta": 1.0 },
+          { "field": "tech_stack.web.backend_frameworks", "value": "gatsby" },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "react" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "vue-app",
+      "description": "Vue web app (plain Vue, not Nuxt).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "package.json" },
+          { "kind": "content", "file": "package.json", "regex": "\"vue\"\\s*:" },
+          { "kind": "not", "of": { "kind": "content", "file": "package.json", "regex": "\"nuxt\"\\s*:" } }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "vue" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "angular-app",
+      "description": "Angular web app.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "file_exists", "path": "angular.json" },
+          { "kind": "content", "file": "package.json", "regex": "@angular/core" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 1.0,
+        "contributions": [
+          { "field": "app_type", "value": "web_app", "delta": 1.0 },
+          { "field": "tech_stack.web.frontend_frameworks", "value": "angular" },
+          { "field": "tech_stack.languages", "value": "typescript" },
+          { "field": "tech_stack.runtimes", "value": "node" },
+          { "field": "tech_stack.platforms", "value": "web" },
+          { "field": "tech_stack.build_systems", "value": "npm" },
+          { "field": "tech_stack.package_managers", "value": "npm" }
+        ]
+      }
+    },
+    {
+      "id": "python-click-cli",
+      "description": "Python CLI built on click.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"click(?:\"|[><=!~])" },
+          { "kind": "content", "file": "requirements.txt", "regex": "(?mi)^click(?:$|[^\\w-])" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.9 },
+          { "field": "tech_stack.frameworks", "value": "click" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "python-typer-cli",
+      "description": "Python CLI built on typer.",
+      "when": {
+        "kind": "any",
+        "of": [
+          { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"typer(?:\"|[><=!~])" },
+          { "kind": "content", "file": "requirements.txt", "regex": "(?mi)^typer(?:$|[^\\w-])" }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.9,
+        "contributions": [
+          { "field": "app_type", "value": "cli_tool", "delta": 0.9 },
+          { "field": "tech_stack.frameworks", "value": "typer" },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "python-library",
+      "description": "Pure Python library (pyproject.toml with [project], no framework or CLI entrypoints).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "pyproject.toml" },
+          { "kind": "content", "file": "pyproject.toml", "regex": "\\[project\\]" },
+          {
+            "kind": "not",
+            "of": {
+              "kind": "any",
+              "of": [
+                { "kind": "content", "file": "pyproject.toml", "regex": "\\[project\\.scripts\\]" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "fastapi" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"flask(?:\"|[><=!~])" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"django(?:\"|[><=!~])" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "python-telegram-bot" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "discord\\.py" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "slack[-_]bolt" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"click(?:\"|[><=!~])" },
+                { "kind": "content", "file": "pyproject.toml", "regex": "(?i)\"typer(?:\"|[><=!~])" }
+              ]
+            }
+          }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.4,
+        "contributions": [
+          { "field": "app_type", "value": "library", "delta": 0.4 },
+          { "field": "tech_stack.languages", "value": "python" },
+          { "field": "tech_stack.runtimes", "value": "python" }
+        ]
+      }
+    },
+    {
+      "id": "html-static-site",
+      "description": "Plain static HTML site (index.html with no package.json or Cargo.toml).",
+      "when": {
+        "kind": "all",
+        "of": [
+          { "kind": "file_exists", "path": "index.html" },
+          { "kind": "not", "of": { "kind": "file_exists", "path": "package.json" } },
+          { "kind": "not", "of": { "kind": "file_exists", "path": "Cargo.toml" } }
+        ]
+      },
+      "payload": {
+        "confidence_weight": 0.3,
+        "contributions": [
+          { "field": "app_type", "value": "static_site", "delta": 0.3 },
+          { "field": "tech_stack.languages", "value": "html" }
         ]
       }
     }

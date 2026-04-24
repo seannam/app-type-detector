@@ -1,0 +1,8 @@
+{
+  "name": "my-node-library",
+  "version": "0.1.0",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

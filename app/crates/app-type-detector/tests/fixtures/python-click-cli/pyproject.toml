@@ -1,0 +1,7 @@
+[project]
+name = "my-click-cli"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.0",
+]

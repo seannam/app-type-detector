@@ -1,0 +1,31 @@
+{
+  "$comment": "Stack-level expectations for scripts/detector-scan-test.py. Each key is a stack name from versioning_scan.json's detected_stack field. 'language' and 'app_type' may be strings or arrays; arrays mean 'any of these is acceptable'. Missing fields are not asserted. Use 'project_overrides' below for per-project adjustments that trump stack expectations.",
+
+  "stack_expectations": {
+    "ios-xcodegen":     { "app_type": "mobile_app", "language": "swift" },
+    "xcode-only":       { "app_type": "mobile_app", "language": "swift" },
+    "spm-library":      { "app_type": "library",    "language": "swift" },
+    "godot":            { "app_type": "game",       "language": "gdscript" },
+    "unity":            { "app_type": "game",       "language": "csharp" },
+    "obsidian-plugin":  { "app_type": "editor_extension", "language": "typescript" },
+    "python-pyproject": { "language": "python" },
+    "rust-cargo":       { "language": "rust" },
+    "go":               { "language": "go" },
+    "android-gradle":   { "app_type": "mobile_app", "language": ["kotlin", "java"] },
+    "node":             { "language": ["javascript", "typescript"] },
+    "wordpress-plugin": { "app_type": "cms_plugin", "language": "php" },
+    "universal":        {},
+    "unknown":          {}
+  },
+
+  "$comment_skip": "Project labels listed here are scanned but never cause the test to fail. Use for projects whose content is intentionally ambiguous or out of vocabulary.",
+  "skip_projects": [
+    "dokploy_server",
+    "seannam_cloudflare_pages"
+  ],
+
+  "$comment_overrides": "Per-project exact overrides. Keyed by label. Same schema as stack_expectations entries.",
+  "project_overrides": {
+    "app-type-detector": { "app_type": "library", "language": "rust" }
+  }
+}

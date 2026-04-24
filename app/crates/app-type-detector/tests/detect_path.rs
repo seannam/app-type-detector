@@ -261,10 +261,10 @@ fn cargo_workspace_fixture() {
 
 #[test]
 fn python_unknown_framework_fixture() {
-    // Baseline rules should still populate the language even when no framework
-    // rule matches, but must not claim an app_type.
+    // A pyproject.toml with [project] and no known web/CLI/bot framework now
+    // falls under the python-library baseline rule.
     let report = detect_path(fixture("python-unknown-framework")).unwrap();
-    assert!(report.app_type.primary.is_none());
+    assert_eq!(report.app_type.primary.as_deref(), Some("library"));
     assert_eq!(
         report.tech_stack.languages.primary.as_deref(),
         Some("python")
@@ -295,4 +295,188 @@ fn report_round_trips_through_json() {
     let json = report.to_json();
     let roundtripped: app_type_detector::DetectionReport = serde_json::from_str(&json).unwrap();
     assert_eq!(report, roundtripped);
+}
+
+#[test]
+fn spm_library_fixture() {
+    let report = detect_path(fixture("spm-library")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("library"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("swift")
+    );
+    assert!(report
+        .tech_stack
+        .package_managers
+        .contains(&"swift_package_manager".to_string()));
+}
+
+#[test]
+fn spm_executable_fixture() {
+    let report = detect_path(fixture("spm-executable")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("cli_tool"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("swift")
+    );
+}
+
+#[test]
+fn node_cli_tool_fixture() {
+    let report = detect_path(fixture("node-cli-tool")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("cli_tool"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("javascript")
+    );
+    assert!(report.tech_stack.runtimes.contains(&"node".to_string()));
+}
+
+#[test]
+fn node_library_fixture() {
+    let report = detect_path(fixture("node-library")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("library"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("javascript")
+    );
+}
+
+#[test]
+fn remix_app_fixture() {
+    let report = detect_path(fixture("remix-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"remix".to_string()));
+    assert!(web.frontend_frameworks.contains(&"react".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("typescript")
+    );
+}
+
+#[test]
+fn sveltekit_app_fixture() {
+    let report = detect_path(fixture("sveltekit-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"sveltekit".to_string()));
+    assert!(web.frontend_frameworks.contains(&"svelte".to_string()));
+}
+
+#[test]
+fn nuxt_app_fixture() {
+    let report = detect_path(fixture("nuxt-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"nuxt".to_string()));
+    assert!(web.frontend_frameworks.contains(&"vue".to_string()));
+}
+
+#[test]
+fn gatsby_site_fixture() {
+    let report = detect_path(fixture("gatsby-site")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("static_site"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.backend_frameworks.contains(&"gatsby".to_string()));
+    assert!(web.frontend_frameworks.contains(&"react".to_string()));
+}
+
+#[test]
+fn vue_app_fixture() {
+    let report = detect_path(fixture("vue-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.frontend_frameworks.contains(&"vue".to_string()));
+}
+
+#[test]
+fn angular_app_fixture() {
+    let report = detect_path(fixture("angular-app")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("web_app"));
+    let web = report.tech_stack.web.expect("web stack populated");
+    assert!(web.frontend_frameworks.contains(&"angular".to_string()));
+}
+
+#[test]
+fn python_click_cli_fixture() {
+    let report = detect_path(fixture("python-click-cli")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("cli_tool"));
+    assert!(report.tech_stack.frameworks.contains(&"click".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn python_typer_cli_fixture() {
+    let report = detect_path(fixture("python-typer-cli")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("cli_tool"));
+    assert!(report.tech_stack.frameworks.contains(&"typer".to_string()));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn python_library_fixture() {
+    let report = detect_path(fixture("python-library")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("library"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("python")
+    );
+}
+
+#[test]
+fn wordpress_plugin_fixture() {
+    let report = detect_path(fixture("wordpress-plugin")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("cms_plugin"));
+    assert_eq!(report.tech_stack.languages.primary.as_deref(), Some("php"));
+    assert!(report
+        .tech_stack
+        .frameworks
+        .contains(&"wordpress".to_string()));
+}
+
+#[test]
+fn obsidian_plugin_fixture() {
+    let report = detect_path(fixture("obsidian-plugin")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("editor_extension"));
+    let ext = report
+        .tech_stack
+        .extension
+        .expect("extension stack populated");
+    assert_eq!(ext.host.as_deref(), Some("obsidian"));
+    assert_eq!(ext.kind.as_deref(), Some("plugin"));
+    assert_eq!(
+        report.tech_stack.languages.primary.as_deref(),
+        Some("typescript")
+    );
+}
+
+#[test]
+fn html_static_site_fixture() {
+    let report = detect_path(fixture("html-static-site")).unwrap();
+    assert_eq!(report.app_type.primary.as_deref(), Some("static_site"));
+    assert_eq!(report.tech_stack.languages.primary.as_deref(), Some("html"));
+}
+
+#[test]
+fn polyglot_monorepo_still_library_dominant() {
+    // Regression: the new node-library rule must not fire on polyglot-monorepo
+    // (its package.json has only "types", no "main"/"exports"). If it did, the
+    // library signal would double and might flip the ambiguity balance.
+    let report = detect_path(fixture("polyglot-monorepo")).unwrap();
+    let fires: Vec<&str> = report
+        .scorecard
+        .fires
+        .iter()
+        .map(|f| f.rule_id.as_str())
+        .collect();
+    assert!(!fires.contains(&"node-library"));
+    assert!(!fires.contains(&"node-cli-tool"));
+    assert!(!fires.contains(&"python-library"));
 }

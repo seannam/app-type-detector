@@ -1,0 +1,8 @@
+{
+  "name": "acme/my-plugin",
+  "description": "My WordPress plugin",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=8.0"
+  }
+}
