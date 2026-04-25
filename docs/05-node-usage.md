@@ -2,8 +2,9 @@
 
 `@indiecraft/app-type-detector` is a thin
 [`napi-rs`](https://napi.rs/) binding around the Rust core crate. It
-ships per-triple prebuilt binaries as optional-dep subpackages: no
-`node-gyp`, no post-install toolchain, no network I/O at install time.
+ships as a **single npm package** with every prebuilt native binary
+bundled inside: no `node-gyp`, no post-install toolchain, no network
+I/O at install time, no per-triple subpackages.
 
 ## Install
 
@@ -13,9 +14,9 @@ npm i @indiecraft/app-type-detector
 # or: yarn add @indiecraft/app-type-detector
 ```
 
-The root package pulls exactly one native subpackage matching your
-machine's triple via `optionalDependencies`. On Linux the loader
-auto-detects glibc vs musl at runtime and loads the correct binary.
+A single tarball contains all six prebuilt `.node` binaries (~15 MB
+unpacked, ~6 MB gzipped). The loader picks the right one for your
+platform at runtime; on Linux it auto-detects glibc vs musl.
 
 ## Usage
 
@@ -122,16 +123,14 @@ release.
 
 ### "failed to load native binding for `<triple>`"
 
-Usually means the optional dependency didn't install. Check for:
-
-- `--no-optional` or `npm_config_optional=false` in your environment.
-- A lockfile that was generated on a different triple and re-used as-is.
-
-Fix by reinstalling with optional deps enabled:
+The single bundled package contains every supported `.node` binary
+in its tarball, so this should not happen on a clean install. If it
+does, your install was truncated or your platform's binary was
+stripped (some packagers ignore unknown file extensions). Try:
 
 ```sh
 rm -rf node_modules
-npm i --include=optional @indiecraft/app-type-detector
+npm i @indiecraft/app-type-detector
 ```
 
 ### "unsupported platform/arch combination"
@@ -154,17 +153,47 @@ pnpm test             # runs the parity suite
 ```
 
 The loader prefers a freshly-built artifact under
-`app/bindings/node/app-type-detector.<triple>.node` over the installed
-optional dependency, so rebuilds are picked up immediately.
+`app/bindings/node/app-type-detector.<triple>.node`, so rebuilds are
+picked up immediately.
 
 ## Release and maintenance notes
 
 The npm channel rides the same `v*.*.*` git tag the Rust crate does:
 `scripts/version/release.sh` is the only code path that tags and
 creates GitHub releases. The `.github/workflows/release-npm.yml`
-workflow listens for that tag, runs the six-triple build matrix, and
-publishes each subpackage followed by the root package.
+workflow listens for that tag, runs the six-triple build matrix in
+parallel, copies every `.node` artifact into the package root, and
+runs a single `npm publish --access public --provenance`.
 
-Maintainers rotating the publishing credential: the `NPM_TOKEN`
-secret is scoped to "Publish → Packages" on the `@indiecraft` npm
-organization. Rotate it under the repository's Actions secrets.
+### Why a single bundled package, not optional-dep subpackages
+
+The napi-rs default ships `@scope/pkg-<triple>` as separate
+`optionalDependencies`. We deliberately do not. One package means:
+
+- One npm publish per release (vs seven).
+- One trusted-publisher entry on npm.com (vs seven).
+- One version source of truth (no drift between root and subpackages).
+- One thing to think about when something goes wrong.
+
+The cost is download size: every consumer pulls all six binaries
+(~6 MB gzipped) instead of one. For a tool used at build / CI time,
+that trade-off is worth the operational simplification.
+
+### Publishing credentials
+
+Publishing uses npm Trusted Publishing (OIDC) — no `NPM_TOKEN` secret
+is stored anywhere. The trusted publisher is configured once on
+npmjs.com under `@indiecraft/app-type-detector → Settings →
+Trusted publishing`, with:
+
+- Provider: GitHub Actions
+- Organization: `seannam`
+- Repository: `app-type-detector`
+- Workflow filename: `release-npm.yml`
+- Environment: *(blank)*
+
+Trusted publishing requires the package to exist already, so the
+**first publish** is done locally with `npm publish --access public`
+(authenticated via the maintainer's passkey through `auth-type=web`).
+After the package exists, configure the trusted publisher and every
+subsequent release flows through CI.

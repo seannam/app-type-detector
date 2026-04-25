@@ -9,7 +9,6 @@ app/target/
 
 # Node binding build artifacts
 app/bindings/node/*.node
-app/bindings/node/npm/*/*.node
 app/bindings/node/.napi-autogen.d.ts
 app/bindings/node/artifacts/
 

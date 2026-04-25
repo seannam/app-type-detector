@@ -7,9 +7,10 @@ project's app type (game, web app, CLI tool, library, …), tech stack
 machine-readable scorecard of every rule that fired.
 
 Thin native binding around the Rust core crate via
-[`napi-rs`](https://napi.rs/). Ships per-triple prebuilt binaries as
-optional-dep subpackages: no `node-gyp`, no post-install toolchain, no
-network I/O at install time.
+[`napi-rs`](https://napi.rs/). Ships as a **single npm package** with
+all six prebuilt `.node` binaries bundled inside: no `node-gyp`, no
+post-install toolchain, no network I/O at install time, no per-triple
+subpackages.
 
 ## Install
 
@@ -17,7 +18,8 @@ network I/O at install time.
 npm i @indiecraft/app-type-detector
 ```
 
-Exactly one native subpackage is pulled to match your machine's triple.
+The loader picks the right binary for your platform at runtime; on
+Linux it auto-detects glibc vs musl.
 
 ## Example
 

@@ -30,48 +30,6 @@
       "type": "json",
       "selector": "version",
       "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/linux-x64-gnu/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/linux-arm64-gnu/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/linux-x64-musl/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/darwin-x64/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/darwin-arm64/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/npm/win32-x64-msvc/package.json",
-      "type": "json",
-      "selector": "version",
-      "optional": true
-    },
-    {
-      "path": "{app_root}/bindings/node/package.json",
-      "type": "native",
-      "command": "f=\"${APP_ROOT:-.}/bindings/node/package.json\"; if [ -f \"$f\" ]; then tmp=$(mktemp) && jq --arg v {version} '.optionalDependencies |= with_entries(.value = $v)' \"$f\" > \"$tmp\" && mv \"$tmp\" \"$f\"; fi",
-      "optional": true
     }
   ],
   "changelog": {

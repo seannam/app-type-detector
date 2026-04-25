@@ -17,7 +17,13 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "README.md"
+    "README.md",
+    "app-type-detector.darwin-arm64.node",
+    "app-type-detector.darwin-x64.node",
+    "app-type-detector.linux-x64-gnu.node",
+    "app-type-detector.linux-arm64-gnu.node",
+    "app-type-detector.linux-x64-musl.node",
+    "app-type-detector.win32-x64-msvc.node"
   ],
   "keywords": [
     "detector",
@@ -40,36 +46,13 @@
     "x64",
     "arm64"
   ],
-  "optionalDependencies": {
-    "@indiecraft/app-type-detector-linux-x64-gnu": "0.3.4",
-    "@indiecraft/app-type-detector-linux-arm64-gnu": "0.3.4",
-    "@indiecraft/app-type-detector-linux-x64-musl": "0.3.4",
-    "@indiecraft/app-type-detector-darwin-x64": "0.3.4",
-    "@indiecraft/app-type-detector-darwin-arm64": "0.3.4",
-    "@indiecraft/app-type-detector-win32-x64-msvc": "0.3.4"
-  },
   "scripts": {
     "build": "napi build --platform --release --dts .napi-autogen.d.ts",
     "build:debug": "napi build --platform --dts .napi-autogen.d.ts",
-    "test": "vitest run",
-    "prepublishOnly": "napi prepublish -t npm --skip-gh-release"
+    "test": "vitest run"
   },
   "napi": {
-    "name": "app-type-detector",
-    "package": {
-      "name": "@indiecraft/app-type-detector"
-    },
-    "triples": {
-      "defaults": false,
-      "additional": [
-        "x86_64-unknown-linux-gnu",
-        "aarch64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
-        "x86_64-pc-windows-msvc"
-      ]
-    }
+    "name": "app-type-detector"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",

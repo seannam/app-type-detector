@@ -1,12 +1,17 @@
 # Publish @indiecraft/app-type-detector to npm after Auto Release
 # successfully cuts a tag.
 #
-# We cannot trigger on `push: tags: ['v*']` because Auto Release pushes
-# tags as `github-actions[bot]` (via the default GITHUB_TOKEN), and
-# GitHub intentionally blocks events produced by GITHUB_TOKEN from
-# starting new workflow runs. `workflow_run` is explicitly exempt from
-# that rule, so we listen for Auto Release to complete, then derive the
-# version from the latest git tag.
+# We listen for Auto Release via workflow_run rather than `push: tags`
+# because Auto Release pushes tags as `github-actions[bot]` (via the
+# default GITHUB_TOKEN), and GitHub intentionally blocks events
+# produced by GITHUB_TOKEN from starting new workflow runs.
+# `workflow_run` is exempt from that rule.
+#
+# This package ships as a SINGLE library: every native binary
+# (one .node per supported triple) is bundled inside the root package
+# under app/bindings/node/, not as separate per-triple subpackages.
+# This mirrors the publishing model of @indiecraft/llm-model-catalog
+# (one package, one publish, one trusted-publisher config on npm).
 #
 # This workflow never creates tags, GitHub releases, or CHANGELOG
 # entries; those responsibilities stay exclusive to the version harness.
@@ -31,8 +36,6 @@ jobs:
   resolve-version:
     name: Resolve canonical version
     runs-on: ubuntu-latest
-    # Only proceed when the upstream Auto Release succeeded. Skipped or
-    # failed runs (no new tag cut) leave nothing for us to publish.
     if: github.event.workflow_run.conclusion == 'success'
     outputs:
       version: ${{ steps.resolve.outputs.version }}
@@ -46,16 +49,10 @@ jobs:
         id: resolve
         run: |
           set -euo pipefail
-          # workflow_run runs on the default branch, so git tag listing
-          # and current.sh --raw see the freshly-pushed tag.
           git fetch --tags origin
           VERSION="$(./scripts/version/current.sh --raw)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Canonical version: $VERSION"
-          # Self-skip if the root package@version is already live on npm
-          # (idempotency guard: Auto Release fires on every main push,
-          # including non-release-worthy commits, so we may wake up
-          # without a new tag to publish).
           if npm view "@indiecraft/app-type-detector@${VERSION}" version >/dev/null 2>&1; then
             echo "@indiecraft/app-type-detector@${VERSION} is already published on npm; skipping."
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
@@ -63,28 +60,14 @@ jobs:
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Assert manifests are in sync with the canonical version
+      - name: Assert root manifest matches the canonical version
         run: |
           set -euo pipefail
           VERSION="${{ steps.resolve.outputs.version }}"
-          mismatches=0
-          for f in \
-            app/bindings/node/package.json \
-            app/bindings/node/npm/linux-x64-gnu/package.json \
-            app/bindings/node/npm/linux-arm64-gnu/package.json \
-            app/bindings/node/npm/linux-x64-musl/package.json \
-            app/bindings/node/npm/darwin-x64/package.json \
-            app/bindings/node/npm/darwin-arm64/package.json \
-            app/bindings/node/npm/win32-x64-msvc/package.json
-          do
-            v="$(jq -r .version "$f")"
-            if [ "$v" != "$VERSION" ]; then
-              echo "::error file=$f::version $v != canonical $VERSION"
-              mismatches=$((mismatches + 1))
-            fi
-          done
-          if [ $mismatches -gt 0 ]; then
-            echo "Preset drift detected. Re-run scripts/version/sync.sh rust-cargo $VERSION on main." >&2
+          actual="$(jq -r .version app/bindings/node/package.json)"
+          if [ "$actual" != "$VERSION" ]; then
+            echo "::error file=app/bindings/node/package.json::version $actual != canonical $VERSION"
+            echo "Re-run scripts/version/sync.sh rust-cargo $VERSION on main." >&2
             exit 1
           fi
 
@@ -149,12 +132,7 @@ jobs:
         shell: bash
 
       - name: Install Node dependencies
-        # No --frozen-lockfile: sync.sh bumps optionalDependencies on
-        # every release, so the lockfile briefly diverges from
-        # package.json between sync and lockfile regeneration. The
-        # optional deps are self-references to subpackages we're about
-        # to publish anyway — there's nothing meaningful to "freeze."
-        run: pnpm -C app/bindings/node install --no-frozen-lockfile
+        run: pnpm -C app/bindings/node install --frozen-lockfile
         shell: bash
 
       - name: Build native binding (${{ matrix.triple }})
@@ -184,15 +162,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: app/bindings/node/pnpm-lock.yaml
           registry-url: 'https://registry.npmjs.org'
 
       # Trusted Publishing (OIDC) needs npm >= 11.5.1. Pin a specific
@@ -200,25 +172,17 @@ jobs:
       # (MODULE_NOT_FOUND: promise-retry in some 11.x publishes).
       - run: npm install -g npm@11.5.1
 
-      - name: Install Node dependencies
-        # No --frozen-lockfile: sync.sh bumps optionalDependencies on
-        # every release, so the lockfile briefly diverges from
-        # package.json between sync and lockfile regeneration. The
-        # optional deps are self-references to subpackages we're about
-        # to publish anyway — there's nothing meaningful to "freeze."
-        run: pnpm -C app/bindings/node install --no-frozen-lockfile
-
-      - name: Download per-triple artifacts
+      - name: Download per-triple artifacts into the package root
         uses: actions/download-artifact@v4
         with:
           path: app/bindings/node/artifacts
 
-      - name: Stage artifacts into per-triple subpackages
+      - name: Stage every .node binary into app/bindings/node/
         run: |
           set -euo pipefail
           for triple in linux-x64-gnu linux-arm64-gnu linux-x64-musl darwin-x64 darwin-arm64 win32-x64-msvc; do
             src="app/bindings/node/artifacts/binding-${triple}/app-type-detector.${triple}.node"
-            dst="app/bindings/node/npm/${triple}/app-type-detector.${triple}.node"
+            dst="app/bindings/node/app-type-detector.${triple}.node"
             if [ ! -f "$src" ]; then
               echo "::error::missing artifact for triple $triple"
               exit 1
@@ -226,37 +190,16 @@ jobs:
             cp "$src" "$dst"
             ls -la "$dst"
           done
-
-      - name: Final version-drift guard
-        run: |
-          set -euo pipefail
-          echo "Asserting every published package.json reports version $VERSION"
-          uniq_count=$(jq -r .version \
-            app/bindings/node/package.json \
-            app/bindings/node/npm/*/package.json | sort -u | wc -l | tr -d ' ')
-          actual=$(jq -r .version app/bindings/node/package.json)
-          if [ "$uniq_count" != "1" ] || [ "$actual" != "$VERSION" ]; then
-            echo "::error::version drift detected; expected $VERSION, got $actual (unique lines: $uniq_count)"
-            exit 1
-          fi
+          rm -rf app/bindings/node/artifacts
 
       # No NODE_AUTH_TOKEN: npm exchanges the GitHub OIDC token for a
       # short-lived publish credential after Trusted Publisher is
       # configured on the package's npm settings page (or auto-created
       # on first publish from a matching workflow). Provenance is
-      # generated automatically under OIDC, no --provenance flag.
-      - name: Publish per-triple subpackages
-        run: |
-          set -euo pipefail
-          for triple in linux-x64-gnu linux-arm64-gnu linux-x64-musl darwin-x64 darwin-arm64 win32-x64-msvc; do
-            echo "::group::publishing @indiecraft/app-type-detector-${triple}@${VERSION}"
-            (cd "app/bindings/node/npm/${triple}" && npm publish --access public)
-            echo "::endgroup::"
-          done
-
-      - name: Publish root package
+      # generated automatically under OIDC.
+      - name: Publish single bundled package
         run: |
           set -euo pipefail
           echo "::group::publishing @indiecraft/app-type-detector@${VERSION}"
-          (cd app/bindings/node && npm publish --access public)
+          (cd app/bindings/node && npm publish --access public --provenance)
           echo "::endgroup::"
