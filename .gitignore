@@ -1,6 +1,7 @@
 # Project-local
 .screenshots/
 .secrets/
+.claude/
 
 # Rust build output
 /app/target/

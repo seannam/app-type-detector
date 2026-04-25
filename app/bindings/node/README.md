@@ -67,9 +67,9 @@ output.
 A WASM fallback for browser / edge runtimes is planned.
 
 Full usage guide, troubleshooting, and release notes live in
-[`docs/05-node-usage.md`](https://github.com/snam/app-type-detector/blob/main/docs/05-node-usage.md).
+[`docs/05-node-usage.md`](https://github.com/seannam/app-type-detector/blob/main/docs/05-node-usage.md).
 
 ## License
 
 MIT. Source at
-[github.com/snam/app-type-detector](https://github.com/snam/app-type-detector).
+[github.com/seannam/app-type-detector](https://github.com/seannam/app-type-detector).

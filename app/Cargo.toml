@@ -11,8 +11,8 @@ version = "0.4.0"
 edition = "2021"
 rust-version = "1.82"
 license = "MIT"
-repository = "https://github.com/snam/app-type-detector"
-homepage = "https://github.com/snam/app-type-detector"
+repository = "https://github.com/seannam/app-type-detector"
+homepage = "https://github.com/seannam/app-type-detector"
 authors = ["snam"]
 
 [workspace.dependencies]

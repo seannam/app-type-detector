@@ -20,7 +20,7 @@ is `app_type = "game"` AND `tech_stack.game.engines = ["godot"]` AND
 - `app/crates/app-type-detector` — the core Rust crate (library + engine +
   default ruleset + human renderer).
 - `app/crates/app-type-detector-cli` — a CLI binary wrapping the core crate.
-- `app/bindings/node` — `@indiecraft/app-type-detector` N-API binding
+- `app/bindings/node` — [`@indiecraft/app-type-detector`](https://www.npmjs.com/package/@indiecraft/app-type-detector) N-API binding
   (see [`docs/05-node-usage.md`](docs/05-node-usage.md)).
 - `app/bindings/python` — planned Python binding (PyPI release tracked
   for a future spec).
@@ -37,8 +37,12 @@ println!("{}", report.to_json());
 
 ## Quick start (Node.js)
 
+[![npm](https://img.shields.io/npm/v/@indiecraft/app-type-detector.svg)](https://www.npmjs.com/package/@indiecraft/app-type-detector)
+
 ```sh
 npm i @indiecraft/app-type-detector
+# or: pnpm add @indiecraft/app-type-detector
+# or: yarn add @indiecraft/app-type-detector
 ```
 
 ```ts
@@ -49,8 +53,14 @@ console.log(report.app_type.primary, report.app_type.confidence);
 console.log(renderHumanReadable(report));
 ```
 
-Ships per-triple prebuilt native binaries via `napi-rs` (no `node-gyp`,
-no network I/O at install time). Full guide:
+Ships as a **single npm package** with all six prebuilt native
+binaries bundled inside (darwin-arm64, darwin-x64, linux-x64-gnu,
+linux-arm64-gnu, linux-x64-musl, win32-x64-msvc) via `napi-rs`. No
+`node-gyp`, no post-install toolchain, no network I/O at install
+time, no per-triple optional dependencies. The loader picks the
+right binary at runtime; on Linux it auto-detects glibc vs musl.
+
+Requires Node `>= 18`. Full guide:
 [`docs/05-node-usage.md`](docs/05-node-usage.md).
 
 ## CLI

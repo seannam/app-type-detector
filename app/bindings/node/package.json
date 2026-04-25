@@ -5,12 +5,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/snam/app-type-detector.git",
+    "url": "git+https://github.com/seannam/app-type-detector.git",
     "directory": "app/bindings/node"
   },
-  "homepage": "https://github.com/snam/app-type-detector",
+  "homepage": "https://github.com/seannam/app-type-detector",
   "bugs": {
-    "url": "https://github.com/snam/app-type-detector/issues"
+    "url": "https://github.com/seannam/app-type-detector/issues"
   },
   "main": "index.js",
   "types": "index.d.ts",
