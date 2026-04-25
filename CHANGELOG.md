@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0] - 2026-04-25
+
+### New
+
+- bundle native binaries into a single npm package
+
+
 ## [0.3.4] - 2026-04-24
 
 
