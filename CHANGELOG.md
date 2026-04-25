@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1] - 2026-04-25
+
+
+### Fixes
+
+- correct repository owner from snam to seannam
+
+
 ## [0.4.0] - 2026-04-25
 
 ### New

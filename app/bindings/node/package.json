@@ -1,6 +1,6 @@
 {
   "name": "@indiecraft/app-type-detector",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Classify any codebase: returns a typed DetectionReport (app_type, tech_stack, scorecard). Native N-API bindings, zero runtime dependencies.",
   "license": "MIT",
   "repository": {
